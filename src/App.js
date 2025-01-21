@@ -29,7 +29,6 @@ import { ToastContainer } from "react-toastify";
 import Sidebar from "./layout/Sidebar";
 
 import AppBar from "./layout/AppBar";
-import EmployUsers from "./pages/EmployUsers";
 import { useDispatch, useSelector } from "react-redux";
 import { database } from "./db/databaseFunction";
 import {
@@ -39,7 +38,6 @@ import {
   setCityArr,
   setClientAccountData,
   setEngineOilPetrolData,
-  setClientReviewsWeb,
   setClientsBanner,
   setEmployAcountData,
   setEmploysData,
@@ -52,7 +50,6 @@ import {
   setOilsData,
   setTireData,
 } from "./store/projectSlice";
-import AddEmployUsers from "./pages/AddEmployUsers";
 import AddProduct from "./pages/AddProduct";
 import AddCategory from "./pages/AddCategory";
 
@@ -60,11 +57,10 @@ import UpdateProduct from "./pages/UpdateProduct";
 import { setAuth } from "./store/authSlice";
 import CategoryManagement from "./pages/CategoryManagement";
 // import AddCarsData from "./pages/AddCarsData";
-import UpdateCarsData from "./pages/UpdateCarsData";
-import OrderDetailsPage from "./pages/OrderDetailsPage";
 import AddBrand from "./pages/AddBrand";
 import BrandManagement from "./pages/BrandManagement";
 import BrandDetails from "./pages/BrandDetails";
+import ProductDetails from "./pages/ProductDetails";
 
 // pages
 const Login = lazy(() => import("./pages/Login"));
@@ -72,13 +68,6 @@ const SalesAnalytics = lazy(() => import("./pages/SalesAnalytics"));
 // const SellersList = lazy(() => import("./pages/SellersList"));
 // const TopProducts = lazy(() => import("./pages/TopProducts"));
 const Banners = lazy(() => import("./pages/Banners"));
-const Orders = lazy(() => import("./pages/Orders"));
-const Statistics = lazy(() => import("./pages/Statistics"));
-const Reviews = lazy(() => import("./pages/Reviews"));
-const Customers = lazy(() => import("./pages/Customers"));
-const Transactions = lazy(() => import("./pages/Transactions"));
-
-const Discounts = lazy(() => import("./pages/Discounts"));
 
 // const GeneralSettings = lazy(() => import("./pages/GeneralSettings"));
 const PageNotFound = lazy(() => import("./pages/PageNotFound"));
@@ -260,18 +249,7 @@ function App() {
         dispatch(setAdminMesgs({ adminMesgs: [] }));
       }
     });
-    database.ref("webReview").on("value", async (snapshot) => {
-      let returnArr = [];
-      const result = await snapshot.val();
-      if (result) {
-        await Object.entries(result).forEach((dat) => {
-          returnArr.push({ dbId: dat[0], ...dat[1] });
-        });
-        dispatch(setClientReviewsWeb({ clientReviewsWeb: returnArr }));
-      } else {
-        dispatch(setClientReviewsWeb({ clientReviewsWeb: [] }));
-      }
-    });
+
     database.ref("OrderCity").on("value", async (snapshot) => {
       let returnArr = [];
       const result = await snapshot.val();
@@ -361,7 +339,7 @@ function App() {
                         )
                       }
                     />
-                   
+
                     <Route
                       path="products-management"
                       element={
@@ -372,27 +350,27 @@ function App() {
                         )
                       }
                     />
-                
+
                     <Route
-                    path="category-management"
-                    element={
-                      isAuth === "Authenticated" ? (
-                        <CategoryManagement />
-                      ) : (
-                        <Navigate to="/" />
-                      )
-                    }
-                  />
-                  <Route
-                  path="brand-management"
-                  element={
-                    isAuth === "Authenticated" ? (
-                      <BrandManagement />
-                    ) : (
-                      <Navigate to="/" />
-                    )
-                  }
-                />
+                      path="category-management"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <CategoryManagement />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="brand-management"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <BrandManagement />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
 
                     <Route
                       path="/editProduct/:id/:refer"
@@ -404,47 +382,7 @@ function App() {
                         )
                       }
                     />
-                    <Route
-                      path="/editCarData/:id"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <UpdateCarsData />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    <Route
-                      path="/orderDetails/:id"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <OrderDetailsPage />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    <Route
-                      path="orders"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <Orders />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    <Route
-                      path="addEmploy"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <AddEmployUsers />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    <Route
+                        <Route
                       path="addProducts"
                       element={
                         isAuth === "Authenticated" ? (
@@ -455,35 +393,45 @@ function App() {
                       }
                     />
                     <Route
-                    path="addCategory"
+                      path="addCategory"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <AddCategory />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="addBrand"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <AddBrand />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/brandDetails/:id"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <BrandDetails />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                    path="/productDetails/:id"
                     element={
                       isAuth === "Authenticated" ? (
-                        <AddCategory/>
+                        <ProductDetails />
                       ) : (
                         <Navigate to="/" />
                       )
                     }
                   />
-                  <Route
-                  path="addBrand"
-                  element={
-                    isAuth === "Authenticated" ? (
-                      <AddBrand/>
-                    ) : (
-                      <Navigate to="/" />
-                    )
-                  }
-                />
-                <Route
-                path="/brandDetails/:id"
-                element={
-                  isAuth === "Authenticated" ? (
-                    <BrandDetails />
-                  ) : (
-                    <Navigate to="/" />
-                  )
-                }
-              />
                     <Route
                       path="banners"
                       element={
@@ -494,78 +442,7 @@ function App() {
                         )
                       }
                     />
-                    <Route
-                      path="statistics"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <Statistics />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    <Route
-                      path="reviews"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <Reviews />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    <Route
-                      path="customers"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <Customers />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    <Route
-                      path="transactions"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <Transactions />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    <Route
-                      path="discounts"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <Discounts />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
 
-           
-
-                    {/* <Route path="categories" element={<Categories />} /> */}
-                    <Route
-                      path="employ-users"
-                      element={
-                        isAuth === "Authenticated" ? (
-                          <EmployUsers />
-                        ) : (
-                          <Navigate to="/" />
-                        )
-                      }
-                    />
-                    {/* <Route
-                      path="EmployRolesPage"
-                      element={<EmployRolesPage />}
-                    />
-                    <Route
-                      path="general-settings"
-                      element={<GeneralSettings />}
-                    /> */}
                     <Route path="*" element={<Navigate to="/404" />} />
                     <Route path="/404" element={<PageNotFound />} />
                   </Routes>

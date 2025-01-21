@@ -1,35 +1,20 @@
 import React, { useState, useEffect } from "react";
-// import { useNavigate } from "react-router-dom";
-// import Select from "../../ui/Select";
 import StyledTable from "./styles";
 import Empty from "../../components/Empty";
 import Pagination from "../../ui/Pagination";
 import { useWindowSize } from "react-use";
-// import { CATEGORY_OPTIONS } from "../../constants/options"; // Category filter options
 import { Switch } from "antd";
 import usePagination from "../../hooks/usePagination";
+import {  FaEdit, FaTrash } from "react-icons/fa";
+
 
 const BrandDetailsTable = () => {
   const { width } = useWindowSize();
-//   const navigate = useNavigate();
 
-  // Static brand data
   const [staticData, setStaticData] = useState([
-    {
-      id: 1,
-      categoryName: "Category A",
-      status: true,
-    },
-    {
-      id: 2,
-      categoryName: "Category B",
-      status: false,
-    },
-    {
-      id: 3,
-      categoryName: "Category C",
-      status: true,
-    },
+    { id: 1, categoryName: "Category A", status: true },
+    { id: 2, categoryName: "Category B", status: false },
+    { id: 3, categoryName: "Category C", status: true },
   ]);
 
   const [filteredData, setFilteredData] = useState(staticData);
@@ -38,13 +23,6 @@ const BrandDetailsTable = () => {
   const [editableData, setEditableData] = useState({});
   const pagination = usePagination(filteredData, 10);
 
-//   // Clear all filters
-//   const handleClearFilters = () => {
-//     setCategory("all");
-//     setFilteredData(staticData);
-//   };
-
-  // Toggle status (active/inactive) for a category
   const toggleStatus = (id) => {
     const updatedData = staticData.map((item) =>
       item.id === id ? { ...item, status: !item.status } : item
@@ -53,17 +31,13 @@ const BrandDetailsTable = () => {
     setFilteredData(updatedData);
   };
 
-  // Edit functionality
   const handleEditClick = (record) => {
     setEditingRowId(record.id);
     setEditableData({ ...record });
   };
 
   const handleInputChange = (e, fieldName) => {
-    setEditableData({
-      ...editableData,
-      [fieldName]: e.target.value,
-    });
+    setEditableData({ ...editableData, [fieldName]: e.target.value });
   };
 
   const handleSave = () => {
@@ -79,7 +53,6 @@ const BrandDetailsTable = () => {
     setEditingRowId(null);
   };
 
-  // Delete functionality
   const handleDelete = (record) => {
     if (window.confirm(`Are you sure you want to delete ${record.categoryName}?`)) {
       const updatedData = staticData.filter((item) => item.id !== record.id);
@@ -88,7 +61,6 @@ const BrandDetailsTable = () => {
     }
   };
 
-  // Filter data by category
   useEffect(() => {
     if (category === "all") {
       setFilteredData(staticData);
@@ -99,9 +71,19 @@ const BrandDetailsTable = () => {
 
   return (
     <div className="flex flex-col flex-1">
- 
+      <div className="mb-4">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="all">All Categories</option>
+          <option value="Category A">Category A</option>
+          <option value="Category B">Category B</option>
+          <option value="Category C">Category C</option>
+        </select>
+      </div>
 
-      {/* Table or Cards */}
       <div className="flex flex-1 flex-col gap-[22px] mt-4">
         {width >= 768 ? (
           <StyledTable
@@ -172,13 +154,15 @@ const BrandDetailsTable = () => {
                         className="px-3 py-1 text-blue-500 hover:text-blue-700"
                         onClick={() => handleEditClick(record)}
                       >
-                        Edit
+                      <FaEdit className="mr-2" /> 
+
                       </button>
                       <button
                         className="px-3 py-1 text-red-500 hover:text-red-700"
                         onClick={() => handleDelete(record)}
                       >
-                        Delete
+                      <FaTrash className="mr-2" /> 
+
                       </button>
                     </div>
                   ),
@@ -235,7 +219,6 @@ const BrandDetailsTable = () => {
           </div>
         )}
 
-        {/* Pagination */}
         {pagination.maxPage > 1 && <Pagination pagination={pagination} />}
       </div>
     </div>

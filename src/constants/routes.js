@@ -9,22 +9,28 @@ const ROUTES = [
   {
     name: "Brand Management",
     path: "/brand-management",
-    icon: "pen-to-square-regular",
+    icon: "star-regular",
   },
-  {
-    name: "Brand Details",
-    path: "/brandDetails/:id",
-    icon: "pen-to-square-regular",
-  },
+  
+  // {
+  //   name: "Brand Details",
+  //   path: "/brandDetails/:id",
+  //   icon: "circle-plus-regular",
+  // },
+  // {
+  //   name: "Product Details",
+  //   path: "/productDetails/:id",
+  //   icon: "pen-to-square-regular",
+  // },
 
+  {
+    name: "Products Management",
+    path: "/products-management",
+    icon: "circle-plus-regular",
+  },
   // {
   //   name: "Cars Management",
   //   path: "/car-management",
-  //   icon: "pen-to-square-regular",
-  // },
-  // {
-  //   name: "Products Management",
-  //   path: "/products-management",
   //   icon: "pen-to-square-regular",
   // },
   // {

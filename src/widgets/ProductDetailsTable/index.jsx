@@ -5,45 +5,47 @@ import StyledTable from "./styles";
 import Empty from "../../components/Empty";
 import Pagination from "../../ui/Pagination";
 import { useWindowSize } from "react-use";
-import { BRAND_OPTIONS } from "../../constants/options";
 import { Switch } from "antd";
 import usePagination from "../../hooks/usePagination";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
-const ProductManagementTable = ({ searchQuery }) => {
+const ProductDetailsTable = ({ searchQuery }) => {
   const { width } = useWindowSize();
   const navigate = useNavigate();
 
   const [staticData, setStaticData] = useState([
     {
       id: 1,
-      brandName: "Brand A",
+      productName: "Product A",
       image: "https://via.placeholder.com/50",
       price: 100,
+      category: "Category 1",
       status: true,
     },
     {
       id: 2,
-      brandName: "Brand B",
+      productName: "Product B",
       image: "https://via.placeholder.com/50",
       price: 200,
+      category: "Category 2",
       status: false,
     },
     {
       id: 3,
-      brandName: "Brand C",
+      productName: "Product C",
       image: "https://via.placeholder.com/50",
       price: 300,
+      category: "Category 3",
       status: true,
     },
   ]);
 
   const [filteredData, setFilteredData] = useState(staticData);
-  const [brand, setBrand] = useState("all");
+  const [category, setCategory] = useState("all");
   const pagination = usePagination(filteredData, 10);
 
   const handleClearFilters = () => {
-    setBrand("all");
+    setCategory("all");
     setFilteredData(staticData);
   };
 
@@ -72,35 +74,42 @@ const ProductManagementTable = ({ searchQuery }) => {
 
   useEffect(() => {
     let updatedData = staticData;
-    if (brand !== "all") {
-      updatedData = updatedData.filter((item) => item.brandName === brand);
+    if (category !== "all") {
+      updatedData = updatedData.filter((item) => item.category === category);
     }
     if (searchQuery) {
       updatedData = updatedData.filter((item) =>
-        item.brandName.toLowerCase().includes(searchQuery.toLowerCase())
+        item.productName.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
     setFilteredData(updatedData);
-  }, [brand, searchQuery, staticData]);
+  }, [category, searchQuery, staticData]);
 
   return (
     <div className="flex flex-col flex-1">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-x-6 xl:grid-cols-6 mb-4">
         <Select
-          options={BRAND_OPTIONS}
+          options={[
+            { value: "all", label: "All Categories" },
+            { value: "Category 1", label: "Category 1" },
+            { value: "Category 2", label: "Category 2" },
+            { value: "Category 3", label: "Category 3" },
+          ]}
           value={{
-            label: brand === "all" ? "All Brands" : brand,
-            value: brand,
+            label: category === "all" ? "All Categories" : category,
+            value: category,
           }}
-          placeholder="Select Brand"
-          onChange={(e) => setBrand(e.value)}
+          placeholder="Select Category"
+          onChange={(e) => setCategory(e.value)}
         />
-        <button
-          className="btn btn--outline blue !h-[44px]"
-          onClick={handleClearFilters}
-        >
-          Clear
-        </button>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            className="btn btn--outline blue !h-[44px]"
+            onClick={handleClearFilters}
+          >
+            Clear Filters
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-[22px] mt-4">
@@ -117,9 +126,9 @@ const ProductManagementTable = ({ searchQuery }) => {
                 ),
               },
               {
-                title: "Brand Name",
-                dataIndex: "brandName",
-                key: "brandName",
+                title: "Product Name",
+                dataIndex: "productName",
+                key: "productName",
                 render: (text) => <span>{text}</span>,
               },
               {
@@ -143,6 +152,12 @@ const ProductManagementTable = ({ searchQuery }) => {
                 render: (price) => <span>${price}</span>,
               },
               {
+                title: "Category",
+                dataIndex: "category",
+                key: "category",
+                render: (text) => <span>{text}</span>,
+              },
+              {
                 title: "Status",
                 dataIndex: "status",
                 key: "status",
@@ -159,7 +174,7 @@ const ProductManagementTable = ({ searchQuery }) => {
                 key: "actions",
                 align: "center",
                 render: (_, record) => (
-                  <div className="flex gap-3 justify-center">
+                  <div className="flex gap-2 justify-center">
                     <FaEye
                       className="text-blue-500 cursor-pointer"
                       onClick={() => handleViewProduct(record.id)}
@@ -187,13 +202,14 @@ const ProductManagementTable = ({ searchQuery }) => {
           <div className="flex flex-col gap-5">
             {pagination.currentItems().map((item) => (
               <div className="card" key={`product-${item.id}`}>
-                <h6>{item.brandName}</h6>
+                <h6>{item.productName}</h6>
                 <img
                   src={item.image}
-                  alt={item.brandName}
+                  alt={item.productName}
                   className="w-[50px] h-[50px] rounded"
                 />
                 <p>Price: ${item.price}</p>
+                <p>Category: {item.category}</p>
                 <Switch
                   checked={item.status}
                   onChange={() => toggleStatus(item.id)}
@@ -209,4 +225,4 @@ const ProductManagementTable = ({ searchQuery }) => {
   );
 };
 
-export default ProductManagementTable;
+export default ProductDetailsTable;

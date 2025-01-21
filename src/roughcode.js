@@ -1,312 +1,274 @@
-import React, { useState } from "react";
-import classNames from "classnames";
-import Spring from "../components/Spring";
-import { useNavigate } from 'react-router-dom';
-import PageHeader from "../layout/PageHeader";
+import Select from "../../ui/Select";
+import StyledTable from "./styles";
+import Empty from "../../components/Empty";
+import Pagination from "../../ui/Pagination";
+import { useState, useEffect } from "react";
+import usePagination from "../../hooks/usePagination";
+import { useWindowSize } from "react-use";
+import { CATEGORY_OPTIONS } from "../../constants/options";
+import { Switch } from "antd";
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
-const AddCategory = () => {
-  const navigate = useNavigate();
+const CategoryManagementTable = () => {
+  const { width } = useWindowSize();
 
-  const [categoryData, setCategoryData] = useState({
-    categoryName: "",
-    categoryImage: null,
-    categoryType: "",
-    categoryLabel: "",
-    addedCategories: [],
-    showPropertyTable: false,
-  });
+  // Static data for the table
+  const [staticData, setStaticData] = useState([
+    {
+      id: 1,
+      name: "Filters",
+      image: "https://via.placeholder.com/50",
+      promo: "Promo 1",
+      status: true,
+    },
+    {
+      id: 2,
+      name: "Oils",
+      image: "https://via.placeholder.com/50",
+      promo: "Promo 2",
+      status: false,
+    },
+    {
+      id: 3,
+      name: "Batteries",
+      image: "https://via.placeholder.com/50",
+      promo: "Promo 3",
+      status: true,
+    },
+  ]);
 
-  const [propertyData, setPropertyData] = useState({
-    propertyName: "",
-    propertyDescription: "",
-    propertyType: "",
-  });
+  const [filteredData, setFilteredData] = useState(staticData);
+  const [category, setCategory] = useState("all");
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [editableData, setEditableData] = useState({});
+  const pagination = usePagination(filteredData, 10);
 
-  const handleImageUpload = (e, isProperty = false) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (isProperty) {
-          setPropertyData({ ...propertyData, propertyImage: reader.result });
-        } else {
-          setCategoryData({ ...categoryData, categoryImage: reader.result });
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleClearFilters = () => {
+    setCategory("all");
+    setFilteredData(staticData);
   };
 
-  const handleImageRemove = (isProperty = false) => {
-    if (isProperty) {
-      setPropertyData({ ...propertyData, propertyImage: null });
-    } else {
-      setCategoryData({ ...categoryData, categoryImage: null });
-    }
-  };
-
-  const handleCategoryAdd = () => {
-    const { categoryName, categoryType, categoryLabel } = categoryData;
-    if (!categoryName || !categoryType || !categoryLabel) {
-      alert("Please fill all category fields.");
-      return;
-    }
-
-    const newCategory = {
-      id: Date.now(),
-      categoryName,
-      categoryImage: categoryData.categoryImage,
-      categoryType,
-      categoryLabel,
-    };
-
-    setCategoryData((prev) => ({
-      ...prev,
-      addedCategories: [...prev.addedCategories, newCategory],
-      categoryName: "",
-      categoryImage: null,
-      categoryType: "",
-      categoryLabel: "",
-    }));
-  };
-
-  const handlePropertyAdd = () => {
-    const { propertyName, propertyDescription, propertyType } = propertyData;
-    if (!propertyName || !propertyDescription || !propertyType) {
-      alert("Please fill all property fields.");
-      return;
-    }
-
-    setCategoryData((prev) => ({
-      ...prev,
-      categoryProperties: [
-        ...prev.categoryProperties,
-        { ...propertyData, id: Date.now() },
-      ],
-    }));
-
-    setPropertyData({
-      propertyName: "",
-      propertyDescription: "",
-      propertyType: "",
-    });
-  };
-
-  const handlePropertyDelete = (id) => {
-    setCategoryData((prev) => ({
-      ...prev,
-      categoryProperties: prev.categoryProperties.filter((prop) => prop.id !== id),
-    }));
-  };
-
-  const handlePropertyEdit = (id) => {
-    const propertyToEdit = categoryData.categoryProperties.find(
-      (prop) => prop.id === id
+  const toggleStatus = (id) => {
+    setFilteredData((prevData) =>
+      prevData.map((item) =>
+        item.id === id ? { ...item, status: !item.status } : item
+      )
     );
-    setPropertyData(propertyToEdit);
-    handlePropertyDelete(id);
+    setStaticData((prevData) =>
+      prevData.map((item) =>
+        item.id === id ? { ...item, status: !item.status } : item
+      )
+    );
   };
 
-  const handleDeleteCategory = (id) => {
-    setCategoryData((prev) => ({
-      ...prev,
-      addedCategories: prev.addedCategories.filter((category) => category.id !== id),
-    }));
+  const handleEditClick = (record) => {
+    setEditingRowId(record.id);
+    setEditableData({ ...record });
   };
 
-  const handleSaveCategory = () => {
-    const { addedCategories } = categoryData;
-    if (addedCategories.length === 0) {
-      alert("No categories to save.");
-      return;
-    }
+  const handleSave = () => {
+    setStaticData((prevData) =>
+      prevData.map((item) =>
+        item.id === editingRowId ? { ...item, ...editableData } : item
+      )
+    );
+    setFilteredData((prevData) =>
+      prevData.map((item) =>
+        item.id === editingRowId ? { ...item, ...editableData } : item
+      )
+    );
+    setEditingRowId(null);
+  };
 
-    // Save categories logic here (e.g., send data to the backend)
-    console.log("Categories saved: ", addedCategories);
+  const handleCancel = () => {
+    setEditingRowId(null);
+  };
 
-    // Optionally reset the form data after saving
-    setCategoryData({
-      categoryName: "",
-      categoryImage: null,
-      categoryType: "",
-      categoryLabel: "",
-      addedCategories: [],
+  const handleChange = (e, fieldName) => {
+    setEditableData({
+      ...editableData,
+      [fieldName]: e.target.value,
     });
-
-    // Optionally navigate to another page
-    navigate("/category-management");
   };
+
+  const handleDelete = (record) => {
+    if (window.confirm(`Are you sure you want to delete ${record.name}?`)) {
+      setFilteredData(prevData => prevData.filter(item => item.id !== record.id));
+      setStaticData(prevData => prevData.filter(item => item.id !== record.id));
+    }
+  };
+
+  useEffect(() => {
+    if (category === "all") {
+      setFilteredData(staticData);
+    } else {
+      setFilteredData(staticData.filter((item) => item.name === category));
+    }
+  }, [category, staticData]);
 
   return (
-    <>
-      <PageHeader title="Add Category" />
-
-      <div className="bg-widget flex items-center justify-center w-full py-10 px-4 lg:p-[60px]">
-        <Spring
-          className="w-full max-w-[560px]"
-          type="slideUp"
-          duration={400}
-          delay={300}
-        >
-          <form className="mt-5 flex flex-col gap-5">
-            {/* Category Name */}
-            <div className="field-wrapper">
-              <label htmlFor="categoryName" className="field-label">
-                Category Name
-              </label>
-              <input
-                className={classNames("field-input")}
-                required
-                id="categoryName"
-                type="text"
-                placeholder="Category name"
-                value={categoryData.categoryName}
-                onChange={(e) =>
-                  setCategoryData({ ...categoryData, categoryName: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Category Image Upload */}
-            <div className="field-wrapper">
-              <label className="field-label">Category Image</label>
-              <div className="image-upload-wrapper relative w-full h-48 border-dashed border-2 border-primary flex items-center justify-center cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                  onChange={(e) => handleImageUpload(e)}
-                />
-                {categoryData.categoryImage ? (
-                  <div className="relative h-full w-full">
-                    <img
-                      src={categoryData.categoryImage}
-                      alt="Category Preview"
-                      className="h-full w-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                      onClick={() => handleImageRemove()}
-                    >
-                      &#10005;
-                    </button>
-                  </div>
-                ) : (
-                  <span className="text-gray-500">Click to upload an image</span>
-                )}
-              </div>
-            </div>
-
-            {/* Category Type Dropdown (Service/E-commerce) */}
-            <div className="field-wrapper">
-              <label htmlFor="categoryType" className="field-label">
-                Category Type
-              </label>
-              <select
-                className="field-input"
-                id="categoryType"
-                value={categoryData.categoryType}
-                onChange={(e) =>
-                  setCategoryData({
-                    ...categoryData,
-                    categoryType: e.target.value,
-                  })
-                }
-              >
-                <option value="">Select Type</option>
-                <option value="Service">Service</option>
-                <option value="E-commerce">E-commerce</option>
-              </select>
-            </div>
-
-            {/* Category Label/Tag Name */}
-            <div className="field-wrapper">
-              <label htmlFor="categoryLabel" className="field-label">
-                Category Label/Tag Name
-              </label>
-              <input
-                className="field-input"
-                id="categoryLabel"
-                type="text"
-                placeholder="Enter label/tag name"
-                value={categoryData.categoryLabel}
-                onChange={(e) =>
-                  setCategoryData({
-                    ...categoryData,
-                    categoryLabel: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            {/* Add Category Button (Before Properties Table) */}
-            <div className="flex justify-center gap-5 mt-8">
-              <button
-                type="button"
-                className="btn btn--primary px-10 py-3"
-                onClick={handleCategoryAdd}
-              >
-                Add Category
-              </button>
-            </div>
-
-            {/* Category Properties Table */}
-            {categoryData.addedCategories.length > 0 && (
-              <div className="category-properties-table mt-6">
-                <h3 className="text-lg font-bold">Added Categories</h3>
-                <table className="w-full mt-4 border-collapse border border-gray-300">
-                  <thead>
-                    <tr className="bg-gray-200">
-                      <th className="border border-gray-300 p-2">S.No</th>
-                      <th className="border border-gray-300 p-2">Name</th>
-                      <th className="border border-gray-300 p-2">Type</th>
-                      <th className="border border-gray-300 p-2">Label</th>
-                      <th className="border border-gray-300 p-2">Image</th>
-                      <th className="border border-gray-300 p-2">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {categoryData.addedCategories.map((category, index) => (
-                      <tr key={category.id} className="hover:bg-gray-100">
-                        <td className="border border-gray-300 p-2">{index + 1}</td>
-                        <td className="border border-gray-300 p-2">{category.categoryName}</td>
-                        <td className="border border-gray-300 p-2">{category.categoryType}</td>
-                        <td className="border border-gray-300 p-2">{category.categoryLabel}</td>
-                        <td className="border border-gray-300 p-2">
-                          {category.categoryImage ? (
-                            <img src={category.categoryImage} alt="Category" className="h-12 w-12 object-cover" />
-                          ) : (
-                            "No Image"
-                          )}
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          <button className="text-red-500" onClick={() => handleDeleteCategory(category.id)}>
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Save Category Button */}
-            <div className="flex justify-center gap-5 mt-8">
-              <button
-                type="button"
-                className="btn btn--primary px-10 py-3"
-                onClick={handleSaveCategory}
-              >
-                Save Category
-              </button>
-            </div>
-          </form>
-        </Spring>
+    <div className="flex flex-col flex-1">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-x-6 xl:grid-cols-6 mb-4">
+        <Select
+          options={CATEGORY_OPTIONS}
+          value={{ label: category === "all" ? "All Categories" : category, value: category }}
+          placeholder="Select Category"
+          onChange={(e) => setCategory(e.value)}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            className="btn btn--outline blue !h-[44px]"
+            onClick={handleClearFilters}
+          >
+            Clear
+          </button>
+        </div>
       </div>
-    </>
+
+      <div className="flex flex-1 flex-col gap-[22px] mt-4">
+        {width >= 768 ? (
+          <StyledTable
+            columns={[
+              {
+                title: "Sr. No.",
+                dataIndex: "id",
+                key: "id",
+                align: "center",
+                render: (_, __, index) => (
+                  <span>{pagination.pageIndex * 10 + index + 1}</span>
+                ),
+              },
+              {
+                title: "Category Name",
+                dataIndex: "name",
+                key: "name",
+                render: (text, record) =>
+                  editingRowId === record.id ? (
+                    <select
+                      className="w-full p-2 border rounded"
+                      value={editableData.name}
+                      onChange={(e) => handleChange(e, "name")}
+                    >
+                      {CATEGORY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    text
+                  ),
+              },
+              {
+                title: "Promo",
+                dataIndex: "promo",
+                key: "promo",
+                render: (text, record) =>
+                  editingRowId === record.id ? (
+                    <input
+                      type="text"
+                      className="w-full p-2 border rounded"
+                      value={editableData.promo}
+                      onChange={(e) => handleChange(e, "promo")}
+                    />
+                  ) : (
+                    text
+                  ),
+              },
+              {
+                title: "Image",
+                dataIndex: "image",
+                key: "image",
+                align: "center",
+                render: (image) => (
+                  <img
+                    src={image}
+                    alt="Category"
+                    className="w-[50px] h-[50px] rounded"
+                  />
+                ),
+              },
+              {
+                title: "Status",
+                dataIndex: "status",
+                key: "status",
+                align: "center",
+                render: (status, record) => (
+                  <Switch
+                    checked={status}
+                    onChange={() => toggleStatus(record.id)}
+                  />
+                ),
+              },
+              {
+                title: "Actions",
+                key: "actions",
+                align: "center",
+                render: (_, record) =>
+                  editingRowId === record.id ? (
+                    <div className="flex gap-2 justify-center">
+                      <button
+                        className="px-3 py-1 text-green-500 hover:text-green-700 flex items-center"
+                        onClick={handleSave}
+                      >
+                        Save
+                      </button>
+                      <button
+                        className="px-3 py-1 text-gray-500 hover:text-gray-700 flex items-center"
+                        onClick={handleCancel}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 justify-center">
+                      <button
+                        className="px-3 py-1 text-blue-500 hover:text-blue-700 flex items-center"
+                        onClick={() => handleEditClick(record)}
+                      >
+                        <FaEdit className="mr-2" /> 
+                      </button>
+                      <button
+                        className="px-3 py-1 text-red-500 hover:text-red-700 flex items-center"
+                        onClick={() => handleDelete(record)}
+                      >
+                        <FaTrash className="mr-2" /> 
+                      </button>
+                    </div>
+                  ),
+              },
+            ]}
+            dataSource={pagination.currentItems()}
+            rowKey={(record) => record.id}
+            locale={{
+              emptyText: <Empty text="No categories found" />,
+            }}
+            pagination={false}
+          />
+        ) : (
+          <div className="flex flex-col gap-5">
+            {pagination.currentItems().map((item) => (
+              <div className="card" key={`category-${item.id}`}>
+                <h6>{item.name}</h6>
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-[50px] h-[50px] rounded"
+                />
+                <p>Promo: {item.promo}</p>
+                <Switch
+                  checked={item.status}
+                  onChange={() => toggleStatus(item.id)}
+                />
+          
+              </div>
+            ))}
+          </div>
+        )}
+        {pagination.maxPage > 1 && <Pagination pagination={pagination} />}
+      </div>
+    </div>
   );
 };
 
-export default AddCategory;
+export default CategoryManagementTable;

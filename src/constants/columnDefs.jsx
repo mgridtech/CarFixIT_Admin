@@ -10,7 +10,7 @@ import moment from "moment";
 
 import Counter from "../components/Counter";
 
-import { Input, Select, Button, Switch ,DatePicker} from "antd";
+import { Input, Select, Button, Switch, DatePicker } from "antd";
 import { EditOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
 // import { NavLink } from 'react-router-dom';
 
@@ -23,169 +23,6 @@ import {
 import { removeData } from "../db/databaseFunction";
 import { toast } from "react-toastify";
 import ShowTeamInfo from "../components/ShowTeamInfo";
-// import ShowDiemensions from "../components/ShowDiemensions";
-
-// export const ORDERS_COLUMN_DEFS = [
-//   {
-//     title: "# order",
-//     dataIndex: "id",
-//     render: (text) => <span className="subheading-2">{text}</span>,
-//   },
-//   {
-//     title: "Total Products",
-//     dataIndex: "products",
-//     className: "product-cell",
-//     // render: (product) => {
-//     //   const findQuantity = (data) => {
-//     //     let quantity = 0;
-//     //     data.map((dat) => {
-//     //       quantity = quantity + dat.quantity ? dat.quantity : 1;
-//     //       return null;
-//     //     });
-//     //     return quantity;
-//     //   };
-//     render: (product = []) => {
-//       const findQuantity = (data) => {
-//         let quantity = 0;
-//         data.forEach((dat) => {
-//           quantity += dat.quantity ? dat.quantity : 1;
-//         });
-//         return quantity;
-//       };
-//       const oilData = product.filter((dat) => dat.referance === "Oils");
-//       const filterData = product.filter((dat) => dat.referance === "Filters");
-//       const batteryData = product.filter((dat) => dat.referance === "btteries");
-//       const tyreData = product.filter((dat) => dat.referance === "Tyres");
-//       const engineOilData = product.filter(
-//         (dat) => dat.referance === "engineOil"
-//       );
-//       const engineOilPetrolData = product.filter(
-//         (dat) => dat.referance === "engineOilPetrol"
-//       );
-//       const oilsQuantity = findQuantity(oilData);
-//       const filterQuantity = findQuantity(filterData);
-//       const batteryQuantity = findQuantity(batteryData);
-//       const tyreQuantity = findQuantity(tyreData);
-//       const engineOilQuantity = findQuantity(engineOilData);
-//       const engineOilPetrolQuantity = findQuantity(engineOilPetrolData);
-//       const engileTotalQuantity = engineOilQuantity + engineOilPetrolQuantity;
-//       return (
-//         <div className="flex gap-6">
-//           <h5 className="text-sm max-w-[195px] mb-1.5">
-//             Filters :{filterQuantity}
-//           </h5>
-//           <h5 className="text-sm max-w-[195px] mb-1.5">Oils :{oilsQuantity}</h5>
-//           <h5 className="text-sm max-w-[195px] mb-1.5">
-//             Tyres :{tyreQuantity}
-//           </h5>
-//           <h5 className="text-sm max-w-[195px] mb-1.5">
-//             Batteries :{batteryQuantity}
-//           </h5>
-//           <h5 className="text-sm max-w-[195px] mb-1.5">
-//             Engine Oil :{engileTotalQuantity}
-//           </h5>
-//         </div>
-//       );
-//     },
-//     responsive: ["lg"],
-//   },
-//   {
-//     title: "Warrenty",
-//     dataIndex: "warentyEnabled",
-//     render: (Warrenty) => {
-//       return (
-//         <div className="flex flex-col px-6">
-//           <span className="font-heading font-bold text-header">
-//             {Warrenty ? "Yes" : "No"}
-//           </span>
-//         </div>
-//       );
-//     },
-//   },
-//   // {
-//   //   title: "Category",
-//   //   dataIndex: "category",
-//   //   render: (category) => (
-//   //     <div className="flex items-center gap-4">
-//   //       <div
-//   //         className={`badge-icon badge-icon--sm bg-${
-//   //           getCategory(category).color
-//   //         }`}
-//   //       >
-//   //         <i className={`${getCategory(category).icon} text-base`} />
-//   //       </div>
-//   //       <span className="label-text">{getCategory(category).label}</span>
-//   //     </div>
-//   //   ),
-//   //   responsive: ["lg"],
-//   // },
-//   {
-//     title: "Payment",
-//     dataIndex: "totalPrice",
-//     render: (payment) => {
-//       return (
-//         <div className="flex flex-col">
-//           <span className="font-heading font-bold text-header">
-//             {payment} SAR
-//           </span>
-//         </div>
-//       );
-//     },
-//   },
-//   {
-//     title: "Order Status",
-//     dataIndex: "orderStatus",
-//     render: (status) => (
-//       <span
-//         className="badge-status badge-status--lg"
-//         style={{ backgroundColor: `var(--${getStatusColor(status)})` }}
-//       >
-//         {status}
-//       </span>
-//     ),
-//   },
-//   {
-//     title: "Rate",
-//     dataIndex: "serviceRating",
-//     render: (rating) => <RatingStars rating={rating ? rating : 0} />,
-//     responsive: ["xl"],
-//   },
-//   {
-//     title: "Actions",
-//     dataIndex: "id",
-//     //width: "70px",
-//     render: (id) => {
-//       const deleteOrder = async (id) => {
-//         if (
-//           !window.confirm(
-//             `Are you sure you want to delete order with id ${id}?`
-//           )
-//         ) {
-//           return;
-//         } else {
-//           await removeData("orders", id)
-//             .then(() => {
-//               toast.success("Order Deleted");
-//             })
-//             .catch((e) => {
-//               toast.error(`Error: ${e}`);
-//             });
-//         }
-//       };
-//       return (
-//         <div className="flex items-center justify-between gap-11">
-//           <NavLink to={`/orderDetails/${id}`} aria-label="Details">
-//             <img src={ViewIcon} alt="view" />
-//           </NavLink>
-//           <button onClick={() => deleteOrder(id)} aria-label="Edit">
-//             <img src={trash} alt="trash" />
-//           </button>
-//         </div>
-//       );
-//     },
-//   },
-// ];
-
 
 export const USERS_COLUMN_DEFS = [
   {
@@ -193,26 +30,7 @@ export const USERS_COLUMN_DEFS = [
     dataIndex: "dbId",
     render: (text) => <span className="subheading-2">#{text}</span>,
   },
-  // {
-  //   title: "Profiless",
-  //   dataIndex: "userImage",
-  //   className: "product-cell",
-  //   render: (profileImg) => (
-  //     <div className="flex gap-6">
-  //       <div className="img-wrapper w-[70px] h-[64px] flex items-center justify-center shrink-0">
-  //         <img
-  //           src={
-  //             profileImg
-  //               ? profileImg
-  //               : "data:image/png;base64,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"
-  //           }
-  //           alt={"profilePicture"}
-  //         />
-  //       </div>
-  //     </div>
-  //   ),
-  //   responsive: ["lg"],
-  // },
+
   {
     title: "Name",
     dataIndex: "name",
@@ -492,47 +310,7 @@ export const TRANSACTIONS_COLUMN_DEFS = [
     dataIndex: "updatedAt",
     render: (timestamp) => <Timestamp date={timestamp} />,
   },
-  // {
-  //   title: "Seller",
-  //   dataIndex: "seller",
-  //   render: (text, record) => {
-  //     return (
-  //       <>
-  //         {record.seller ? (
-  //           <div className="flex items-center gap-[18px]">
-  //             <div className="img-wrapper w-[60px] h-[60px] flex items-center justify-center shrink-0">
-  //               <img
-  //                 className="max-w-[50px]"
-  //                 src={record.seller.logo}
-  //                 alt={record.seller.name}
-  //               />
-  //             </div>
-  //             <span className="hidden truncate lg:inline">
-  //               {record.seller.name}
-  //             </span>
-  //           </div>
-  //         ) : (
-  //           "N/A"
-  //         )}
-  //       </>
-  //     );
-  //   },
-  // },
-  // {
-  //   title: "SKU",
-  //   dataIndex: "sku",
-  //   responsive: ["lg"],
-  // },
-  // {
-  //   title: "Method",
-  //   dataIndex: "method",
-  //   responsive: ["xxl"],
-  // },
-  // {
-  //   title: "Type",
-  //   dataIndex: "type",
-  //   render: (type) => <span className="capitalize">{type}</span>,
-  // },
+
   {
     title: "Status",
     dataIndex: "orderStatus",
@@ -545,26 +323,6 @@ export const TRANSACTIONS_COLUMN_DEFS = [
       </span>
     ),
   },
-  // {
-  //   title: "Country",
-  //   dataIndex: "country",
-  //   responsive: ["xxl"],
-  // },
-  // {
-  //   title: "Curr",
-  //   dataIndex: "currency",
-  //   responsive: ["xl"],
-  // },
-  // {
-  //   title: "Fee",
-  //   dataIndex: "fee",
-  //   responsive: ["xl"],
-  // },
-  // {
-  //   title: "Tax",
-  //   dataIndex: "tax",
-  //   responsive: ["xl"],
-  // },
   {
     title: "Total",
     dataIndex: "totalPrice",
@@ -672,165 +430,12 @@ export const SELLERS_COLUMN_DEFS = [
   },
 ];
 
-
-  export const CATEGORY_MANAGEMENT_COLUMN_DEFS = [
-    { title: "Category Name", dataIndex: "categoryName", key: "categoryName" },
-    { title: "Created At", dataIndex: "createdAt", key: "createdAt" },
-    { title: "Status", dataIndex: "status", key: "status" },
-    { title: "Actions", dataIndex: "actions", key: "actions" },
-  ];
-
-  // export const PRODUCTS_MANAGEMENT_COLUMN_DEFS = [
-  //   {
-  //     title: "#Id",
-  //     render: (image) => (
-  //       <span className="inline-block h6 w-auto text-sm">
-  //         {image?.skuId ? image?.skuId : image?.dbId}
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     title: "Product name",
-  //     render: (Product) => (
-  //       <>
-  //         <span className="inline-block h6 !text-sm">
-  //           English: {Product?.productNameEng}
-  //         </span>
-  //         <br />
-  //         <span className="inline-block h6 !text-sm">
-  //           Arabic: {Product?.productNameArab}
-  //         </span>
-  //       </>
-  //     ),
-  //   },
-  //   // {
-  //   //   title: "Stock",
-  //   //   dataIndex: "stock",
-  //   //   width: 130,
-  //   //   render: (stock) => (
-  //   //     <div className="flex items-center gap-5">
-  //   //       {stock == null ? (
-  //   //         "On Demand"
-  //   //       ) : (
-  //   //         <span>
-  //   //           <span className={`${stock !== 0 ? "text-green" : "text-red"}`}>
-  //   //             {stock !== 0
-  //   //               ? stock >= 10
-  //   //                 ? "In stock "
-  //   //                 : "Low Inventory "
-  //   //               : "Out of stock "}
-  //   //           </span>
-  //   //           ({stock})
-  //   //         </span>
-  //   //       )}
-  //   //     </div>
-  //   //   ),
-  //   // },
-  //   {
-  //     title: "Price (SAR)",
-  //     render: (Product) => (
-  //       <>
-  //         <span className="inline-block h6 !text-sm max-w-[155px]">
-  //           Original: {Product?.originalPrice}
-  //         </span>
-  //         <br />
-  //         {Product?.commercialPrice && (
-  //           <span className="inline-block h6 !text-sm max-w-[155px]">
-  //             Commercial: {Product?.commercialPrice}
-  //           </span>
-  //         )}
-  //       </>
-  //     ),
-  //   },
-  //   {
-  //     title: "Type",
-  //     dataIndex: "reference",
-  //     render: (type) => (
-  //       <span className="capitalize">
-  //         {type === "Oils"
-  //           ? "Oil"
-  //           : type === "Filters"
-  //           ? "Filter"
-  //           : type === "Tyres"
-  //           ? "Tyre"
-  //           : type === "btteries"
-  //           ? "Battery"
-  //           : type === "engineOil"
-  //           ? "Engine Oil"
-  //           : type === "engineOilPetrol"
-  //           ? "Engine Oil Petrol"
-  //           : "-"}
-  //       </span>
-  //     ),
-  //     responsive: ["lg"],
-  //   },
-  //   {
-  //     title: "Warenty",
-  //     dataIndex: "warenty",
-  //     render: (type) => (
-  //       <span className="capitalize">{type ? type : 0} Years</span>
-  //     ),
-  //   },
-
-  //   {
-  //     title: "Diemensions",
-  //     render: (product) => (
-  //       <>
-  //         {product?.productDiemensions?.length > 0 ? (
-  //           <ShowDiemensions dim={product.productDiemensions} />
-  //         ) : (
-  //           "-"
-  //         )}
-  //       </>
-  //     ),
-  //     responsive: ["lg"],
-  //   },
-  //   {
-  //     title: "Actions",
-  //     render: (product) => {
-  //       const deleteOrder = async (id, refer) => {
-  //         if (id?.length > 0 && refer?.length > 0) {
-  //           if (
-  //             !window.confirm(
-  //               `Are you sure you want to delete product with id ${id}?`
-  //             )
-  //           ) {
-  //             return;
-  //           } else {
-  //             await removeData(refer, id)
-  //               .then(() => {
-  //                 toast.success("Product Deleted");
-  //               })
-  //               .catch((e) => {
-  //                 toast.error(`Error: ${e}`);
-  //               });
-  //           }
-  //         } else {
-  //           toast.error("Product Id or Type not found");
-  //         }
-  //       };
-  //       return (
-  //         <div className="flex items-center justify-end gap-7">
-  //           <NavLink
-  //             to={`/editProduct/${product.dbId}/${product.reference}`}
-  //             aria-label="Edit"
-  //           >
-  //             <i className="icon icon-pen-to-square-regular text-lg leading-none" />
-  //           </NavLink>
-  //           <button
-  //             onClick={() => deleteOrder(product.dbId, product.reference)}
-  //             to="#"
-  //             aria-label="Edit"
-  //           >
-  //             <img src={trash} alt="trash" />
-  //           </button>
-  //           {/* <SubmenuTrigger /> */}
-  //         </div>
-  //       );
-  //     },
-  //   },
-  // ];
-
+export const CATEGORY_MANAGEMENT_COLUMN_DEFS = [
+  { title: "Category Name", dataIndex: "categoryName", key: "categoryName" },
+  { title: "Created At", dataIndex: "createdAt", key: "createdAt" },
+  { title: "Status", dataIndex: "status", key: "status" },
+  { title: "Actions", dataIndex: "actions", key: "actions" },
+];
 const { Option } = Select;
 export const getDiscountsColumnDefs = ({
   handleStatusToggle,
@@ -852,17 +457,7 @@ export const getDiscountsColumnDefs = ({
     title: "Category",
     dataIndex: "category",
     key: "category",
-      render: (text) => text,
-    // render: (text, record) =>
-    //   editingRowId === record.id || editingRowId === record.dbId ? (
-    //     <Input
-    //       value={editableData.category}
-    //       onChange={(e) => handleChange(e, "category")}
-    //       style={{ width: "200px" }}
-    //     />
-    //   ) : (
-    //     text
-    //   ),
+    render: (text) => text,
   },
   {
     title: "Type (%/Amt)",
@@ -918,16 +513,8 @@ export const getDiscountsColumnDefs = ({
     render: (text, record) =>
       editingRowId === record.id || editingRowId === record.dbId ? (
         <div className="flex items-center gap-2">
-          <Button
-            type="link"
-            icon={<SaveOutlined />}
-            onClick={handleSave}
-          />
-          <Button
-            type="link"
-            icon={<CloseOutlined />}
-            onClick={handleCancel}
-          />
+          <Button type="link" icon={<SaveOutlined />} onClick={handleSave} />
+          <Button type="link" icon={<CloseOutlined />} onClick={handleCancel} />
         </div>
       ) : (
         <Button
@@ -938,8 +525,6 @@ export const getDiscountsColumnDefs = ({
       ),
   },
 ];
-
-
 
 export const getCouponsColumnDefs = ({
   handleEditClick,
@@ -1045,7 +630,7 @@ export const getCouponsColumnDefs = ({
         text
       ),
   },
-   {
+  {
     title: "Expiry Date",
     dataIndex: "expiryDate",
     key: "expiryDate",
@@ -1053,14 +638,18 @@ export const getCouponsColumnDefs = ({
       editingRowId === record.id ? (
         <DatePicker
           showTime
-          value={editableData.expiryDate ? moment(editableData.expiryDate) : null}
+          value={
+            editableData.expiryDate ? moment(editableData.expiryDate) : null
+          }
           onChange={(date) => handleDateChange(date)}
           // disabledDate={(current) => current && current < moment().startOf('day')}
           style={{ width: "200px" }}
           format="YYYY-MM-DD HH:mm:ss"
         />
+      ) : text ? (
+        moment(text).format("YYYY-MM-DD HH:mm:ss")
       ) : (
-        text ? moment(text).format("YYYY-MM-DD HH:mm:ss") : ""
+        ""
       ),
   },
   {
@@ -1092,6 +681,3 @@ export const getCouponsColumnDefs = ({
       ),
   },
 ];
-
-
-

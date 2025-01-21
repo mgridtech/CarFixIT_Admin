@@ -34,6 +34,7 @@
     "react-headroom": "^3.2.1",
     "react-helmet": "^6.1.0",
     "react-hook-form": "^7.46.2",
+    "react-icons": "^5.4.0",
     "react-intersection-observer": "^9.5.2",
     "react-leaflet": "^4.2.1",
     "react-number": "^0.0.1-alpha4",

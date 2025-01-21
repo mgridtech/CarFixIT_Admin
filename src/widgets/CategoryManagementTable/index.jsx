@@ -7,6 +7,7 @@ import usePagination from "../../hooks/usePagination";
 import { useWindowSize } from "react-use";
 import { CATEGORY_OPTIONS } from "../../constants/options";
 import { Switch } from "antd";
+import {  FaEdit, FaTrash } from "react-icons/fa";
 
 const CategoryManagementTable = () => {
   const { width } = useWindowSize();
@@ -115,8 +116,8 @@ const CategoryManagementTable = () => {
           onChange={(e) => setCategory(e.value)}
         />
         <div className="grid grid-cols-2 gap-3">
-          <button 
-            className="btn btn--outline blue !h-[44px]" 
+          <button
+            className="btn btn--outline blue !h-[44px]"
             onClick={handleClearFilters}
           >
             Clear
@@ -206,14 +207,14 @@ const CategoryManagementTable = () => {
                 render: (_, record) =>
                   editingRowId === record.id ? (
                     <div className="flex gap-2 justify-center">
-                      <button 
-                        className="px-3 py-1 text-green-500 hover:text-green-700"
+                      <button
+                        className="px-3 py-1 text-green-500 hover:text-green-700 flex items-center"
                         onClick={handleSave}
                       >
                         Save
                       </button>
-                      <button 
-                        className="px-3 py-1 text-gray-500 hover:text-gray-700"
+                      <button
+                        className="px-3 py-1 text-gray-500 hover:text-gray-700 flex items-center"
                         onClick={handleCancel}
                       >
                         Cancel
@@ -221,17 +222,17 @@ const CategoryManagementTable = () => {
                     </div>
                   ) : (
                     <div className="flex gap-2 justify-center">
-                      <button 
-                        className="px-3 py-1 text-blue-500 hover:text-blue-700"
+                      <button
+                        className="px-3 py-1 text-blue-500 hover:text-blue-700 flex items-center"
                         onClick={() => handleEditClick(record)}
                       >
-                        Edit
+                        <FaEdit className="mr-2" /> 
                       </button>
-                      <button 
-                        className="px-3 py-1 text-red-500 hover:text-red-700"
+                      <button
+                        className="px-3 py-1 text-red-500 hover:text-red-700 flex items-center"
                         onClick={() => handleDelete(record)}
                       >
-                        Delete
+                        <FaTrash className="mr-2" /> 
                       </button>
                     </div>
                   ),
@@ -249,9 +250,9 @@ const CategoryManagementTable = () => {
             {pagination.currentItems().map((item) => (
               <div className="card" key={`category-${item.id}`}>
                 <h6>{item.name}</h6>
-                <img 
-                  src={item.image} 
-                  alt={item.name} 
+                <img
+                  src={item.image}
+                  alt={item.name}
                   className="w-[50px] h-[50px] rounded"
                 />
                 <p>Promo: {item.promo}</p>
@@ -259,39 +260,7 @@ const CategoryManagementTable = () => {
                   checked={item.status}
                   onChange={() => toggleStatus(item.id)}
                 />
-                <div className="flex items-center justify-center gap-3">
-                  {editingRowId === item.id ? (
-                    <>
-                      <button 
-                        className="px-3 py-1 text-green-500 hover:text-green-700"
-                        onClick={handleSave}
-                      >
-                        Save
-                      </button>
-                      <button 
-                        className="px-3 py-1 text-gray-500 hover:text-gray-700"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button 
-                        className="px-3 py-1 text-blue-500 hover:text-blue-700"
-                        onClick={() => handleEditClick(item)}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        className="px-3 py-1 text-red-500 hover:text-red-700"
-                        onClick={() => handleDelete(item)}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
+          
               </div>
             ))}
           </div>

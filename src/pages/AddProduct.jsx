@@ -1,740 +1,441 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "../layout/PageHeader";
 import Spring from "../components/Spring";
-import { useState } from "react";
-import classNames from "classnames";
-import { toast } from "react-toastify";
-import { postData } from "../db/databaseFunction";
-import { useNavigate } from "react-router-dom";
-import { uploadTheImage } from "../db/databaseFunction";
-import DropFiles from "../components/DropFiles";
-import trash from "../assets/icons/trash.svg";
-import { useSelector } from "react-redux";
-import MultiSelectDropdown from "../components/MultiSelectDropdown.js"; // Import the new component
 
 const AddProduct = () => {
-  const [isLoadingModal, setisLoadingModal] = useState(false);
-  const [imagesArray, setimagesArray] = useState([]);
-  const { adminCarsData } = useSelector((state) => state.project);
-  const [selectedVehicles, setSelectedVehicles] = useState([]);
-
   const navigate = useNavigate();
-  const [formData, setformData] = useState({
-    nameEng: "",
-    nameArab: "",
-    descEng: "",
-    descArab: "",
-    ogPrice: "",
-    cmPrice: "",
-    type: "",
-    warenty: "",
-    skuId: "",
+
+  const [productData, setProductData] = useState({
+    skuid: "",
+    name: "",
     quantity: "",
+    videoUrl: "",
+    status: "",
+    price: "",
+    category: "",
+    brand: "",
+    properties: [
+      { description: "", type: "", value: "" },
+      { description: "", type: "", value: "" },
+    ],
+    images: [],
+    suitableCars: [],
   });
-  const [diemensionAaay, setdiemensionAaay] = useState([]);
-  const [diemsensionValue, setdiemsensionValue] = useState({
-    engName: "",
-    arabName: "",
-    value: "",
-  });
-  // const [compatibleValue, setcompatibleValue] = useState("");
-  const [compatibleVehicles, setcompatibleVehicles] = useState([]);
 
-  const handlePasswordReminder = async (e) => {
-    e.preventDefault();
-    const extraData = {
-      warenty: formData?.warenty
-        ? Number(parseFloat(formData.warenty).toFixed(1))
-        : 0,
-      productDiemensions: diemensionAaay
-        ? diemensionAaay.map((dat, index) => {
-            return { ...dat, id: index };
-          })
-        : [],
-    };
-    const dataToPost = {
-      skuId: formData?.skuId,
-      originalPrice: Number(parseFloat(formData.ogPrice).toFixed(2)),
-      productDescArab: formData.descArab,
-      productDescEng: formData.descEng,
-      productNameArab: formData.nameArab,
-      productNameEng: formData.nameEng,
-      images: imagesArray,
-      suitableVehicles: compatibleVehicles,
-      quantity: Number(formData.quantity) // Include quantity
-    };
-    const commercialObject = {
-      commercialPrice: Number(parseFloat(formData.cmPrice).toFixed(2)),
-    };
-    const finaldata = {
-      ...dataToPost,
-      ...(formData.type !== "Oils" &&
-      formData.type !== "Filters" &&
-      formData.type !== "engineOil" &&
-      formData.type !== "engineOilPetrol" && // New condition added
-      formData.type !== ""
-        ? extraData
-        : {}),
-      ...(formData.type === "Filters" && formData.type !== ""
-        ? commercialObject
-        : {}),
-    };
-  // Log all the data before submission
-  console.log("Final Data to be posted:", finaldata);
+  const [categories] = useState([
+    "Filters",
+    "Oils",
+    "Batteries",
+    "Tyres",
+    "Engine Oil Petrol",
+    "Engine Oil Diesel",
+  ]);
 
-    if (compatibleVehicles?.length > 0) {
-      if (imagesArray?.length > 0) {
-        await postData(formData.type, { ...finaldata })
-          .then(() => {
-            toast.success("Product Added");
-            navigate(-1);
-          })
-          .catch((e) => toast.error("Error" + e));
-      } else {
-        toast.error("Please Upload atleast one product image");
-      }
-    } else {
-      toast.error("Please Add atleast one vehicle");
+  const [brands] = useState(["Brand A", "Brand B", "Brand C"]);
+
+  const [cars] = useState(["Car Model A", "Car Model B", "Car Model C"]);
+  const [selectedCars, setSelectedCars] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+  // Toggle dropdown visibility
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProductData({
+          ...productData,
+          images: [...productData.images, reader.result],
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
-  const removeImageFromDb = async (index) => {
+
+  const handleImageRemove = (index) => {
+    const updatedImages = productData.images.filter((_, i) => i !== index);
+    setProductData({ ...productData, images: updatedImages });
+  };
+
+  const handleProductAdd = () => {
     if (
-      !window.confirm(
-        `Are you sure you want to delete number ${index + 1} image ?`
-      )
+      !productData.name ||
+      !productData.price ||
+      !productData.category ||
+      !productData.brand
     ) {
+      alert("Please fill in required product fields");
       return;
-    } else {
-      setisLoadingModal(true);
-      setimagesArray(imagesArray.filter((dat, indexs) => index !== indexs));
-      setisLoadingModal(false);
     }
-  };
-  const uploadImageFunction = async (e) => {
-    setisLoadingModal(true);
-    await uploadTheImage(e[0])
-      .then(async (dat) => {
-        if (dat) {
-          setimagesArray(
-            imagesArray?.length > 0
-              ? [...imagesArray, { imgLink: dat }]
-              : [{ imgLink: dat }]
-          );
-          toast.success("Image Uploaded.");
-        }
-      })
-      .catch((e) => {
-        toast.error("Error" + e);
-      });
-    setisLoadingModal(false);
-  };
-  const handleAddCompatibleVehicles = () => {
-    if (selectedVehicles.length > 0) {
-      // Filter out vehicles already in the compatibleVehicles state to avoid duplicates
-      const newVehicles = selectedVehicles.filter(
-        (vehicle) =>
-          !compatibleVehicles.some((existing) => existing.dbId === vehicle.dbId)
-      );
+    console.log("Product Data: ", productData);
+    // You can save the data or navigate as needed
+    navigate('/products-management');
 
-      setcompatibleVehicles([...compatibleVehicles, ...newVehicles]);
-      setSelectedVehicles([]); // Clear the selected vehicles after adding
-      toast.success("Vehicles added successfully");
-    } else {
-      toast.error("Please select at least one vehicle");
-    }
+  };
+  // Handle car selection with checkboxes
+  const handleCarSelection = (car) => {
+    const updatedSelectedCars = selectedCars.includes(car)
+      ? selectedCars.filter((selectedCar) => selectedCar !== car)
+      : [...selectedCars, car];
+
+    setSelectedCars(updatedSelectedCars);
+  };
+
+  // Add selected cars to the suitableCars array
+  const handleAddCars = () => {
+    setProductData({
+      ...productData,
+      suitableCars: [...productData.suitableCars, ...selectedCars],
+    });
+
+    // Optionally clear the selectedCars list after adding
+    setSelectedCars([]);
+    setIsOpen(false); // Close the dropdown after adding cars
+  };
+
+  const handleRemoveCar = (car) => {
+    const updatedCars = productData.suitableCars.filter((item) => item !== car);
+    setProductData({ ...productData, suitableCars: updatedCars });
   };
 
   return (
     <>
       <PageHeader title="Add Product" />
+
+
       <div className="bg-widget flex items-center justify-center w-full py-10 px-4 lg:p-[60px]">
         <Spring
-          className="w-full max-w-[560px]"
+          className="w-full max-w-[960px]"
           type="slideUp"
           duration={400}
           delay={300}
         >
-          <form
-            className="mt-5 flex flex-col gap-5"
-            onSubmit={handlePasswordReminder}
-          >
-            <div className="field-wrapper">
-              <label htmlFor="skuId" className="field-label">
-                Product Sku Id
-              </label>
-              <input
-                className={classNames("field-input")}
-                required
-                id="skuId"
-                type="text"
-                minLength={6}
-                placeholder="Product Sku Id"
-                value={formData.skuId}
-                onChange={(e) =>
-                  setformData({ ...formData, skuId: e.target.value })
-                }
-              />
-            </div>
+          <form className="mt-5 flex flex-col gap-5">
+            {/* Section A: Product Details - Two Column Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  English Name
+                <label htmlFor="skuid" className="field-label">
+                  SKU ID<span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={classNames("field-input")}
+                  className="field-input"
                   required
-                  id="phone"
+                  id="skuid"
                   type="text"
-                  minLength={10}
-                  placeholder="Product name in english"
-                  value={formData.nameEng}
+                  placeholder="SKU ID"
+                  value={productData.skuid}
                   onChange={(e) =>
-                    setformData({ ...formData, nameEng: e.target.value })
-                  }
-                />
-              </div>
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Arabic Name
-                </label>
-                <input
-                  className={classNames("field-input")}
-                  required
-                  id="phone"
-                  type="text"
-                  minLength={10}
-                  placeholder="Product name in arabic"
-                  value={formData.nameArab}
-                  onChange={(e) =>
-                    setformData({ ...formData, nameArab: e.target.value })
+                    setProductData({ ...productData, skuid: e.target.value })
                   }
                 />
               </div>
 
               <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  English Description
-                </label>
-                <textarea
-                  rows={4}
-                  className={"field-input"}
-                  style={{ height: "120px", padding: "0.5rem" }}
-                  required
-                  minLength={15}
-                  id="phone"
-                  type="text"
-                  placeholder="Product Description in english"
-                  value={formData.descEng}
-                  onChange={(e) =>
-                    setformData({ ...formData, descEng: e.target.value })
-                  }
-                />
-              </div>
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Arabic Description
-                </label>
-                <textarea
-                  rows={4}
-                  className={"field-input"}
-                  minLength={15}
-                  style={{ height: "120px", padding: "0.5rem" }}
-                  required
-                  id="phone"
-                  type="text"
-                  placeholder="Product Description in arabic"
-                  value={formData.descArab}
-                  onChange={(e) =>
-                    setformData({ ...formData, descArab: e.target.value })
-                  }
-                />
-              </div>
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Product Orignal Price
+                <label htmlFor="name" className="field-label">
+                  Product Name<span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={"field-input"}
+                  className="field-input"
                   required
-                  id="phone"
+                  id="name"
+                  type="text"
+                  placeholder="Product Name"
+                  value={productData.name}
+                  onChange={(e) =>
+                    setProductData({ ...productData, name: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="field-wrapper">
+                <label htmlFor="quantity" className="field-label">
+                  Quantity<span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="field-input"
+                  required
+                  id="quantity"
                   type="number"
-                  minLength={1}
-                  placeholder="0"
-                  value={formData.ogPrice}
+                  placeholder="Quantity"
+                  value={productData.quantity}
                   onChange={(e) =>
-                    setformData({ ...formData, ogPrice: e.target.value })
+                    setProductData({ ...productData, quantity: e.target.value })
                   }
                 />
               </div>
 
               <div className="field-wrapper">
-                <label htmlFor="role" className="field-label">
-                  Product Type
+                <label htmlFor="videoUrl" className="field-label">
+                  Video URL
                 </label>
-
-                <select
-                  className={classNames("field-input")}
-                  id="role"
-                  type="text"
-                  placeholder="Product Type"
-                  required
-                  defaultValue={""}
-                  value={formData.type}
+                <input
+                  className="field-input"
+                  id="videoUrl"
+                  type="url"
+                  placeholder="Video URL"
+                  value={productData.videoUrl}
                   onChange={(e) =>
-                    setformData({ ...formData, type: e.target.value })
+                    setProductData({ ...productData, videoUrl: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="field-wrapper">
+                <label htmlFor="status" className="field-label">
+                  Status<span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="field-input"
+                  id="status"
+                  required
+                  value={productData.status}
+                  onChange={(e) =>
+                    setProductData({ ...productData, status: e.target.value })
                   }
                 >
-                  <option value={""}>Product Type</option>
-                  <option value={"btteries"}>Battery</option>
-                  <option value={"engineOil"}>Engine Oil diesel</option>
-                  <option value={"engineOilPetrol"}>
-                    Engine Oil Petrol
-                  </option>{" "}
-                  {/* New option added */}
-                  <option value={"Filters"}>Filter</option>
-                  <option value={"Oils"}>Oil</option>
-                  <option value={"Tyres"}>Tyre</option>
+                  <option value="">Select Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
-            </div>
 
-            <div className="field-wrapper">
-              <label htmlFor="quantity" className="field-label">
-                Quantity
-              </label>
-              <input
-                className={"field-input"}
-                required
-                id="quantity"
-                type="number"
-                min={1} // Ensure that quantity is at least 1
-                placeholder="Enter quantity"
-                value={formData.quantity}
-                onChange={(e) =>
-                  setformData({ ...formData, quantity: e.target.value })
-                }
-              />
-            </div>
-
-            <div className="field-wrapper">
-              <h6 htmlFor="warrenty" className="h6 text-sm">
-                Select Vehicles
-              </h6>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Select Vehicle
+                <label htmlFor="price" className="field-label">
+                  Price<span className="text-red-500">*</span>
                 </label>
+                <input
+                  className="field-input"
+                  required
+                  id="price"
+                  type="number"
+                  placeholder="Price"
+                  value={productData.price}
+                  onChange={(e) =>
+                    setProductData({ ...productData, price: e.target.value })
+                  }
+                />
+              </div>
 
-                {/*<select
-                  className={classNames("field-input")}
-                  id="role"
-                  type="text"
-                  placeholder="Select Vehicle"
-                  defaultValue={""}
-                  value={compatibleValue}
-                  onChange={(e) => setcompatibleValue(e.target.value)}
+              <div className="field-wrapper">
+                <label htmlFor="category" className="field-label">
+                  Category<span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="field-input"
+                  id="category"
+                  required
+                  value={productData.category}
+                  onChange={(e) =>
+                    setProductData({ ...productData, category: e.target.value })
+                  }
                 >
-                  <option value={""}>Select Vehicle</option>
-                  {adminCarsData?.map((dat) => (
-                    <option
-                      key={dat?.dbId}
-                      value={`${dat.carCompany} ${dat.carName} ${dat?.carModal}`}
-                    >
-                      {dat?.carCompany} {dat?.carName} {dat?.carModal}
+                  <option value="">Select Category</option>
+                  {categories.map((category, index) => (
+                    <option key={index} value={category}>
+                      {category}
                     </option>
                   ))}
                 </select>
-                 */}
-
-                <MultiSelectDropdown
-                  options={adminCarsData}
-                  selectedOptions={selectedVehicles}
-                  setSelectedOptions={setSelectedVehicles}
-                  keyExtractor={(item) => item.dbId} // Use dbId as the unique key for each vehicle
-                />
               </div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleAddCompatibleVehicles();
-                }}
-                className="btn btn--primary max-w-[120px] mt-6"
-              >
-                Add
-              </button>
-              <div className="flex flex-col items-center gap-2">
-                <label
-                  htmlFor="warrenty"
-                  className="field-label"
-                  style={{ color: "transparent" }}
-                >
-                  btn
+
+              <div className="field-wrapper">
+                <label htmlFor="brand" className="field-label">
+                  Brand<span className="text-red-500">*</span>
                 </label>
-                {/*  <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (compatibleValue?.length > 0) {
-                      const fetchTheWholeObject = adminCarsData?.filter(
-                        (dac) =>
-                          `${dac.carCompany} ${dac.carName} ${dac.carModal}` ===
-                          compatibleValue
-                      );
-                      const { dbId, ...rest } = fetchTheWholeObject[0];
-                      setcompatibleVehicles(
-                        compatibleVehicles.length > 0
-                          ? [
-                              ...compatibleVehicles,
-                              {
-                                ...rest,
-                              },
-                            ]
-                          : [
-                              {
-                                ...rest,
-                              },
-                            ]
-                      );
-                      setcompatibleValue("");
-                    } else {
-                      toast.error("Please Select a car first");
-                    }
-                  }}
-                  className="btn btn--primary max-w-[120px]"
+                <select
+                  className="field-input"
+                  id="brand"
+                  required
+                  value={productData.brand}
+                  onChange={(e) =>
+                    setProductData({ ...productData, brand: e.target.value })
+                  }
                 >
-                  Add
-                </button>
-                */}
+                  <option value="">Select Brand</option>
+                  {brands.map((brand, index) => (
+                    <option key={index} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div
-            className="vehicle-list-container overflow-auto h-64 border border-gray-300 mt-4 p-2"
-            style={{ maxHeight: "600px", maxWidth: "100%" }} 
-          >
-            {compatibleVehicles?.length > 0
-              ? compatibleVehicles.map((dat, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-row items-center justify-start mb-2"
-                  >
-                    <div className="flex flex-col item-center justify-start grow">
-                      <p>
-                        {dat.carCompany} {dat.carName} {dat.carModal}
-                      </p>
-                      <p>
-                        {dat.carCompanyAr} {dat.carNameAr} {dat.carModal}
-                      </p>
-                    </div>
-          
-                    <div
-                      onClick={() =>
-                        setcompatibleVehicles(
-                          compatibleVehicles.filter((dat, ind) => ind !== index)
-                        )
-                      }
-                      className="flex flex-col item-center justify-start cursor-pointer"
-                    >
-                      <img
-                        style={{
-                          width: "30px",
-                          height: "25px",
-                          objectFit: "contain",
-                        }}
-                        src={trash}
-                        alt="trash"
-                      />
-                    </div>
-                  </div>
-                ))
-              : null}
-          </div>
-          
-            {formData.type === "Filters" && formData.type !== "" ? (
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Product Commercial Price
-                </label>
+            {/* Section B: Properties */}
+            {productData.properties.map((property, index) => (
+              <div key={index} className="flex gap-5">
+                <div className="field-wrapper w-full">
+                  <label className="field-label">
+                    Category Property {index + 1} (Description)
+                  </label>
+                  <input
+                    className="field-input"
+                    type="text"
+                    placeholder="Property Description"
+                    value={property.description}
+                    onChange={(e) =>
+                      setProductData({
+                        ...productData,
+                        properties: productData.properties.map((prop, i) =>
+                          i === index
+                            ? { ...prop, description: e.target.value }
+                            : prop
+                        ),
+                      })
+                    }
+                  />
+                </div>
+                <div className="field-wrapper w-full">
+                  <label className="field-label">Value</label>
+                  <input
+                    className="field-input"
+                    type="text"
+                    placeholder="Property Value"
+                    value={property.value}
+                    onChange={(e) =>
+                      setProductData({
+                        ...productData,
+                        properties: productData.properties.map((prop, i) =>
+                          i === index
+                            ? { ...prop, value: e.target.value }
+                            : prop
+                        ),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* Section C: Product Images */}
+            <div className="field-wrapper">
+              <label className="field-label">Product Images</label>
+              <div className="image-upload-wrapper relative w-full h-48 border-dashed border-2 border-primary flex items-center justify-center cursor-pointer">
                 <input
-                  className={"field-input"}
-                  required
-                  id="phone"
-                  type="number"
-                  placeholder="0"
-                  minLength={1}
-                  value={formData.cmPrice}
-                  onChange={(e) =>
-                    setformData({ ...formData, cmPrice: e.target.value })
-                  }
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={handleImageUpload}
+                  multiple
                 />
-              </div>
-            ) : null}
-            {formData.type !== "Oils" &&
-            formData.type !== "Filters" &&
-            formData.type !== "engineOil" &&
-            formData.type !== "engineOilPetrol" &&
-            formData.type !== "" ? (
-              <div className="field-wrapper">
-                <label htmlFor="warrenty" className="field-label">
-                  Warrenty
-                </label>
-
-                <input
-                  className={classNames("field-input")}
-                  id="warrenty"
-                  type="number"
-                  minLength={1}
-                  placeholder="0"
-                  required
-                  value={formData.warenty}
-                  onChange={(e) =>
-                    setformData({ ...formData, warenty: e.target.value })
-                  }
-                />
-              </div>
-            ) : null}
-            {formData.type !== "Oils" &&
-            formData.type !== "Filters" &&
-            formData.type !== "engineOil" &&
-            formData.type !== "engineOilPetrol" &&
-            formData.type !== "" ? (
-              <div className="field-wrapper">
-                <h6 htmlFor="warrenty" className="h6 text-sm">
-                  Product Diemensions
-                </h6>
-              </div>
-            ) : null}
-            {formData.type !== "Oils" &&
-            formData.type !== "Filters" &&
-            formData.type !== "engineOil" &&
-            formData.type !== "engineOilPetrol" &&
-            formData.type !== "" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="field-wrapper">
-                  <label htmlFor="warrenty" className="field-label">
-                    Property Name English
-                  </label>
-
-                  <input
-                    className={classNames("field-input")}
-                    id="warrenty"
-                    type="text"
-                    placeholder="English"
-                    value={diemsensionValue.engName}
-                    onChange={(e) =>
-                      setdiemsensionValue({
-                        ...diemsensionValue,
-                        engName: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="field-wrapper">
-                  <label htmlFor="warrenty" className="field-label">
-                    Property Name Arabic
-                  </label>
-
-                  <input
-                    className={classNames("field-input")}
-                    id="warrenty"
-                    type="text"
-                    placeholder="Arabic"
-                    value={diemsensionValue.arabName}
-                    onChange={(e) =>
-                      setdiemsensionValue({
-                        ...diemsensionValue,
-                        arabName: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="field-wrapper">
-                  <label htmlFor="warrenty" className="field-label">
-                    Property Value
-                  </label>
-
-                  <input
-                    className={classNames("field-input")}
-                    id="warrenty"
-                    type="text"
-                    placeholder="Value"
-                    value={diemsensionValue.value}
-                    onChange={(e) =>
-                      setdiemsensionValue({
-                        ...diemsensionValue,
-                        value: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <label
-                    htmlFor="warrenty"
-                    className="field-label"
-                    style={{ color: "transparent" }}
-                  >
-                    btn
-                  </label>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (
-                        diemsensionValue.arabName.length >= 3 &&
-                        diemsensionValue.engName.length >= 3 &&
-                        diemsensionValue.value.length >= 2
-                      ) {
-                        setdiemensionAaay(
-                          diemensionAaay.length > 0
-                            ? [
-                                ...diemensionAaay,
-                                {
-                                  nameEng: diemsensionValue.engName,
-                                  nameArab: diemsensionValue.arabName,
-                                  value: diemsensionValue.value,
-                                },
-                              ]
-                            : [
-                                {
-                                  nameEng: diemsensionValue.engName,
-                                  nameArab: diemsensionValue.arabName,
-                                  value: diemsensionValue.value,
-                                },
-                              ]
-                        );
-                        setdiemsensionValue({
-                          engName: "",
-                          arabName: "",
-                          value: "",
-                        });
-                      } else {
-                        toast.error(
-                          "Product Diemension Name in arabic and english must be atleat 3 letters and value should be atleast 2 letters"
-                        );
-                      }
-                    }}
-                    className="btn btn--primary max-w-[120px]"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-            ) : null}
-            {formData.type !== "Oils" &&
-            formData.type !== "Filters" &&
-            formData.type !== "engineOil" &&
-            formData.type !== "engineOilPetrol" &&
-            formData.type !== "" &&
-            diemensionAaay?.length > 0
-              ? diemensionAaay.map((dat, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-row items-center justify-start"
-                  >
-                    <div className="flex flex-col item-center justify-start grow">
-                      <h5>
-                        {dat.nameEng},{dat.nameArab}
-                      </h5>
-                      <p>{dat.value}</p>
-                    </div>
-                    <div
-                      onClick={() =>
-                        setdiemensionAaay(
-                          diemensionAaay.filter((dat, ind) => ind !== index)
-                        )
-                      }
-                      className="flex flex-col item-center justify-start"
-                    >
-                      <img
-                        style={{
-                          width: "30px",
-                          height: "25px",
-                          objectFit: "contain",
-                        }}
-                        src={trash}
-                        alt="trash"
-                      />
-                    </div>
-                  </div>
-                ))
-              : null}
-            <label className="field-label">Product Images</label>
-            <div className="widgets-grid grid-cols-1 md:grid-cols-2">
-              {imagesArray &&
-                imagesArray?.map((dat, index) => (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      onClick={() => removeImageFromDb(index)}
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        right: 0,
-                        width: "50px",
-                        height: "50px",
-                        background: "rgba(0,0,0,0.5)",
-                        borderRadius: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexDirection: "column",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <img
-                        src={trash}
-                        style={{
-                          width: "30px",
-                          height: "25px",
-                          objectFit: "contain",
-                        }}
-                        alt="trash"
-                      />
-                    </div>
+                {productData.images.length > 0 ? (
+                  <div className="relative h-full w-full">
                     <img
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "10px",
-                      }}
-                      key={index}
-                      src={dat.imgLink}
-                      alt="banner"
+                      src={productData.images[0]}
+                      alt="Product Preview"
+                      className="h-full w-full object-cover"
                     />
+                    <button
+                      type="button"
+                      className="absolute top-2 right-2 bg-red-500 text-red rounded-full p-1"
+                      onClick={() => handleImageRemove(0)}
+                    >
+                      &#10005;
+                    </button>
                   </div>
-                ))}
-              {isLoadingModal ? (
-                <div className="flex justify-center min-h-[120px] items-center w-100 h-100 btn--primary rounded-lg">
-                  <img
-                    className="w-[40px] h-[40px]"
-                    src="https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif"
-                    alt="loading"
-                  />
-                </div>
-              ) : (
-                <DropFiles
-                  type="image"
-                  multiple={false}
-                  onChange={uploadImageFunction}
-                  wrapperClass="flex justify-center min-h-[120px] items-center w-100 h-100 btn--primary rounded-lg"
-                >
-                  <i
-                    className="icon-circle-plus-regular"
-                    style={{ fontSize: "5rem" }}
-                  />
-                </DropFiles>
-              )}
+                ) : (
+                  <span className="text-gray-500">Click to upload images</span>
+                )}
+              </div>
             </div>
-            <div className="flex flex-col items-center gap-6 mt-4 mb-10">
-              <button type="submit" className="btn btn--primary w-full">
-                Upload
+
+            {/* Section D: Suitable Cars */}
+            <div className="field-wrapper">
+              <label className="field-label">Suitable Cars</label>
+              <div className="relative flex items-center">
+                <button
+                  type="button"
+                  className="field-input w-full md:w-auto flex justify-between items-center"
+                  onClick={toggleDropdown}
+                >
+                  {selectedCars.length
+                    ? `${selectedCars.length} car(s) selected`
+                    : "Select Cars"}
+                  <span>{isOpen ? "▲" : "▼"}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--primary ml-3"
+                  onClick={handleAddCars}
+                >
+                  Add Car
+                </button>
+                {isOpen && (
+                  <div
+                    className="absolute left-0 top-full w-full bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto z-10"
+                    style={{
+                      maxHeight: "200px",
+                      top: "calc(100% + 8px)",
+                    }}
+                  >
+                    <ul className="p-2">
+                      {cars.map((car, index) => (
+                        <li key={index} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={car}
+                            value={car}
+                            checked={selectedCars.includes(car)}
+                            onChange={() => handleCarSelection(car)}
+                            className="checkbox-input"
+                          />
+                          <label htmlFor={car} className="text-sm">
+                            {car}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Display Selected Cars Table */}
+            <div className="field-wrapper mt-5">
+              <table className="table-auto w-full text-left">
+                <thead>
+                  <tr>
+                    <th>Selected Cars</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productData.suitableCars.map((car, index) => (
+                    <tr key={index}>
+                      <td>{car}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="text-red-500"
+                          onClick={() =>
+                            setProductData({
+                              ...productData,
+                              suitableCars: productData.suitableCars.filter(
+                                (selectedCar) => selectedCar !== car
+                              ),
+                            })
+                          }
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Save Product Button */}
+            <div className="flex justify-center gap-5">
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={handleProductAdd}
+              >
+                Save Product
               </button>
             </div>
           </form>

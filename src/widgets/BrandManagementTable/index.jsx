@@ -8,6 +8,8 @@ import { useWindowSize } from "react-use";
 import { BRAND_OPTIONS } from "../../constants/options"; // Brand filter options
 import { Switch } from "antd";
 import usePagination from "../../hooks/usePagination";
+import {  FaEdit, FaTrash } from "react-icons/fa";
+
 
 const BrandManagementTable = () => {
   const { width } = useWindowSize();
@@ -228,13 +230,15 @@ const BrandManagementTable = () => {
                         className="px-3 py-1 text-blue-500 hover:text-blue-700"
                         onClick={() => handleEditClick(record)}
                       >
-                        Edit
+                      <FaEdit className="mr-2" /> 
+
                       </button>
                       <button
                         className="px-3 py-1 text-red-500 hover:text-red-700"
                         onClick={() => handleDelete(record)}
                       >
-                        Delete
+                      <FaTrash className="mr-2" /> 
+
                       </button>
                     </div>
                   ),
