@@ -61,6 +61,8 @@ import AddBrand from "./pages/AddBrand";
 import BrandManagement from "./pages/BrandManagement";
 import BrandDetails from "./pages/BrandDetails";
 import ProductDetails from "./pages/ProductDetails";
+import UpdateCategory from "./pages/UpdateCategory";
+import UpdateBrandDetails from "./pages/UpdateBrandDetails";
 
 // pages
 const Login = lazy(() => import("./pages/Login"));
@@ -362,6 +364,16 @@ function App() {
                       }
                     />
                     <Route
+                    path="/updateCategory/:id"
+                    element={
+                      isAuth === "Authenticated" ? (
+                        <UpdateCategory />
+                      ) : (
+                        <Navigate to="/" />
+                      )
+                    }
+                  />
+                    <Route
                       path="brand-management"
                       element={
                         isAuth === "Authenticated" ? (
@@ -371,7 +383,16 @@ function App() {
                         )
                       }
                     />
-
+                    <Route
+                    path="/updateBrandDetail/:id"
+                    element={
+                      isAuth === "Authenticated" ? (
+                        <UpdateBrandDetails />
+                      ) : (
+                        <Navigate to="/" />
+                      )
+                    }
+                  />
                     <Route
                       path="/editProduct/:id/:refer"
                       element={

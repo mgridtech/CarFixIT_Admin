@@ -28,6 +28,19 @@ const ROUTES = [
     path: "/products-management",
     icon: "circle-plus-regular",
   },
+
+  // {
+  //   name: "Update Category",
+  //   path: "/updateCategory/:id",
+  //   icon: "circle-plus-regular",
+  // },
+
+  // {
+  //   name: "Update Brand Details",
+  //   path: "/updateBrandDetail/:id",
+  //   icon: "circle-plus-regular",
+  // },
+
   // {
   //   name: "Cars Management",
   //   path: "/car-management",

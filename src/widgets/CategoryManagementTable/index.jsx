@@ -1,18 +1,19 @@
+import React, { useState, useEffect } from "react";
 import Select from "../../ui/Select";
 import StyledTable from "./styles";
 import Empty from "../../components/Empty";
 import Pagination from "../../ui/Pagination";
-import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import usePagination from "../../hooks/usePagination";
 import { useWindowSize } from "react-use";
 import { CATEGORY_OPTIONS } from "../../constants/options";
 import { Switch } from "antd";
-import {  FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const CategoryManagementTable = () => {
+  const navigate = useNavigate();
   const { width } = useWindowSize();
 
-  // Static data for the table
   const [staticData, setStaticData] = useState([
     {
       id: 1,
@@ -39,8 +40,6 @@ const CategoryManagementTable = () => {
 
   const [filteredData, setFilteredData] = useState(staticData);
   const [category, setCategory] = useState("all");
-  const [editingRowId, setEditingRowId] = useState(null);
-  const [editableData, setEditableData] = useState({});
   const pagination = usePagination(filteredData, 10);
 
   const handleClearFilters = () => {
@@ -61,40 +60,10 @@ const CategoryManagementTable = () => {
     );
   };
 
-  const handleEditClick = (record) => {
-    setEditingRowId(record.id);
-    setEditableData({ ...record });
-  };
-
-  const handleSave = () => {
-    setStaticData((prevData) =>
-      prevData.map((item) =>
-        item.id === editingRowId ? { ...item, ...editableData } : item
-      )
-    );
-    setFilteredData((prevData) =>
-      prevData.map((item) =>
-        item.id === editingRowId ? { ...item, ...editableData } : item
-      )
-    );
-    setEditingRowId(null);
-  };
-
-  const handleCancel = () => {
-    setEditingRowId(null);
-  };
-
-  const handleChange = (e, fieldName) => {
-    setEditableData({
-      ...editableData,
-      [fieldName]: e.target.value,
-    });
-  };
-
   const handleDelete = (record) => {
     if (window.confirm(`Are you sure you want to delete ${record.name}?`)) {
-      setFilteredData(prevData => prevData.filter(item => item.id !== record.id));
-      setStaticData(prevData => prevData.filter(item => item.id !== record.id));
+      setFilteredData((prevData) => prevData.filter((item) => item.id !== record.id));
+      setStaticData((prevData) => prevData.filter((item) => item.id !== record.id));
     }
   };
 
@@ -142,38 +111,11 @@ const CategoryManagementTable = () => {
                 title: "Category Name",
                 dataIndex: "name",
                 key: "name",
-                render: (text, record) =>
-                  editingRowId === record.id ? (
-                    <select
-                      className="w-full p-2 border rounded"
-                      value={editableData.name}
-                      onChange={(e) => handleChange(e, "name")}
-                    >
-                      {CATEGORY_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    text
-                  ),
               },
               {
                 title: "Promo",
                 dataIndex: "promo",
                 key: "promo",
-                render: (text, record) =>
-                  editingRowId === record.id ? (
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded"
-                      value={editableData.promo}
-                      onChange={(e) => handleChange(e, "promo")}
-                    />
-                  ) : (
-                    text
-                  ),
               },
               {
                 title: "Image",
@@ -204,38 +146,22 @@ const CategoryManagementTable = () => {
                 title: "Actions",
                 key: "actions",
                 align: "center",
-                render: (_, record) =>
-                  editingRowId === record.id ? (
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        className="px-3 py-1 text-green-500 hover:text-green-700 flex items-center"
-                        onClick={handleSave}
-                      >
-                        Save
-                      </button>
-                      <button
-                        className="px-3 py-1 text-gray-500 hover:text-gray-700 flex items-center"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        className="px-3 py-1 text-blue-500 hover:text-blue-700 flex items-center"
-                        onClick={() => handleEditClick(record)}
-                      >
-                        <FaEdit className="mr-2" /> 
-                      </button>
-                      <button
-                        className="px-3 py-1 text-red-500 hover:text-red-700 flex items-center"
-                        onClick={() => handleDelete(record)}
-                      >
-                        <FaTrash className="mr-2" /> 
-                      </button>
-                    </div>
-                  ),
+                render: (_, record) => (
+                  <div className="flex gap-2 justify-center">
+                    <button
+                      className="px-3 py-1 text-blue-500 hover:text-blue-700 flex items-center"
+                      onClick={() => navigate(`/updateCategory/${record.id}`)} // Correct navigation
+                    >
+                      <FaEdit className="mr-2" />
+                    </button>
+                    <button
+                      className="px-3 py-1 text-red-500 hover:text-red-700 flex items-center"
+                      onClick={() => handleDelete(record)}
+                    >
+                      <FaTrash className="mr-2" />
+                    </button>
+                  </div>
+                ),
               },
             ]}
             dataSource={pagination.currentItems()}
@@ -260,7 +186,6 @@ const CategoryManagementTable = () => {
                   checked={item.status}
                   onChange={() => toggleStatus(item.id)}
                 />
-          
               </div>
             ))}
           </div>
