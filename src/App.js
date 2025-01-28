@@ -63,6 +63,9 @@ import BrandDetails from "./pages/BrandDetails";
 import ProductDetails from "./pages/ProductDetails";
 import UpdateCategory from "./pages/UpdateCategory";
 import UpdateBrandDetails from "./pages/UpdateBrandDetails";
+import CarManagement from "./pages/CarManagement";
+import AddCar from "./pages/AddCar";
+import AddCarBrand from "./pages/AddCarBrand";
 
 // pages
 const Login = lazy(() => import("./pages/Login"));
@@ -364,6 +367,16 @@ function App() {
                       }
                     />
                     <Route
+                    path="car-management"
+                    element={
+                      isAuth === "Authenticated" ? (
+                        <CarManagement />
+                      ) : (
+                        <Navigate to="/" />
+                      )
+                    }
+                  />
+                    <Route
                     path="/updateCategory/:id"
                     element={
                       isAuth === "Authenticated" ? (
@@ -424,15 +437,35 @@ function App() {
                       }
                     />
                     <Route
-                      path="addBrand"
+                      path="addCar"
                       element={
                         isAuth === "Authenticated" ? (
-                          <AddBrand />
+                          <AddCar />
                         ) : (
                           <Navigate to="/" />
                         )
                       }
                     />
+                    <Route
+                    path="addCarBrand"
+                    element={
+                      isAuth === "Authenticated" ? (
+                        <AddCarBrand />
+                      ) : (
+                        <Navigate to="/" />
+                      )
+                    }
+                  />
+                  <Route
+                  path="addBrand"
+                  element={
+                    isAuth === "Authenticated" ? (
+                      <AddBrand />
+                    ) : (
+                      <Navigate to="/" />
+                    )
+                  }
+                />
                     <Route
                       path="/brandDetails/:id"
                       element={

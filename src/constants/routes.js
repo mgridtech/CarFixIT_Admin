@@ -29,6 +29,12 @@ const ROUTES = [
     icon: "circle-plus-regular",
   },
 
+  {
+    name: "Car Management",
+    path: "/car-management",
+    icon: "circle-plus-regular",
+  },
+
   // {
   //   name: "Update Category",
   //   path: "/updateCategory/:id",

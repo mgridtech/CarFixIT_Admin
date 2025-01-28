@@ -17,6 +17,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.9.2",
+    "axios": "^1.7.9",
     "babel-plugin-styled-components": "^2.1.4",
     "classnames": "^2.3.2",
     "dayjs": "^1.11.10",
