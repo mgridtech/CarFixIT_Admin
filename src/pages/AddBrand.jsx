@@ -1,36 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../layout/PageHeader";
 import Spring from "../components/Spring";
-
+import Services from "./Services/Services";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const AddBrand = () => {
   const navigate = useNavigate();
 
   const [brandData, setBrandData] = useState({
     brandName: "",
     brandImage: null,
-    suitableCategory: "",
+    suitableCategories: [], // Changed to an array for multiple selections
     addedBrands: [],
   });
 
   const [editIndex, setEditIndex] = useState(null);
-  const [categories] = useState([
-    "Filters",
-    "Oils",
-    "Batteries",
-    "Tyres",
-    "Engine Oil Petrol",
-    "Engine Oil Diesel",
-  ]);
+  const [categories, setCategories] = useState([]);  // Categories state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setLoading(true);
+      try {
+        const { data } = await Services.getInstance().getCategories();
+        console.log(data);
+        // Filter categories with categoryType: "ecommerce"
+        const ecommerceCategories = data.filter((category) => category.categoryType === "ecommerce");
+        setCategories(ecommerceCategories);
+      } catch (error) {
+        setError("Failed to fetch categories");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []); // Empty dependency array ensures this runs on component mount
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setBrandData({ ...brandData, brandImage: reader.result });
-      };
-      reader.readAsDataURL(file);
+      setBrandData({ ...brandData, brandImage: file });  // Directly store the file
     }
   };
 
@@ -38,82 +51,58 @@ const AddBrand = () => {
     setBrandData({ ...brandData, brandImage: null });
   };
 
-  const handleBrandAdd = () => {
-    if (!brandData.brandName || !brandData.suitableCategory) {
+  const handleCategoryChange = (categoryName) => {
+    setBrandData((prev) => {
+      const newCategories = prev.suitableCategories.includes(categoryName)
+        ? prev.suitableCategories.filter((cat) => cat !== categoryName)  // Remove category
+        : [...prev.suitableCategories, categoryName];  // Add category
+      return {
+        ...prev,
+        suitableCategories: newCategories,
+      };
+    });
+  };
+
+  const handleSubmitBrand = async () => {
+    if (!brandData.brandName || brandData.suitableCategories.length === 0) {
       alert("Please fill in required brand fields");
       return;
     }
 
-    const newBrand = {
-      id: Date.now(),
-      brandName: brandData.brandName,
-      suitableCategory: brandData.suitableCategory,
-      brandImage: brandData.brandImage,
-    };
+    try {
+      // Call the service method to add the brand
+      const response = await Services.getInstance().addBrandWithFormData(
+        brandData.brandName,
+        brandData.suitableCategories,
+        brandData.brandImage 
+      );
 
-    setBrandData((prev) => ({
-      ...prev,
-      addedBrands: [...prev.addedBrands, newBrand],
-      brandName: "",
-      suitableCategory: "",
-      brandImage: null,
-    }));
-  };
-
-  const handleDeleteBrand = (id) => {
-    setBrandData((prev) => ({
-      ...prev,
-      addedBrands: prev.addedBrands.filter((brand) => brand.id !== id),
-    }));
-  };
-
-  const handleEditBrand = (index) => {
-    const brandToEdit = brandData.addedBrands[index];
-    setBrandData({
-      ...brandData,
-      brandName: brandToEdit.brandName,
-      suitableCategory: brandToEdit.suitableCategory,
-      brandImage: brandToEdit.brandImage,
-    });
-    setEditIndex(index);
-  };
-
-  const handleUpdateBrand = () => {
-    if (editIndex === null) return;
-
-    const updatedBrands = brandData.addedBrands.map((brand, index) =>
-      index === editIndex
-        ? {
-            ...brand,
-            brandName: brandData.brandName,
-            suitableCategory: brandData.suitableCategory,
-            brandImage: brandData.brandImage,
-          }
-        : brand
-    );
-
-    setBrandData((prev) => ({
-      ...prev,
-      addedBrands: updatedBrands,
-      brandName: "",
-      suitableCategory: "",
-      brandImage: null,
-    }));
-    setEditIndex(null);
-  };
-
-  const handleSubmitBrand = () => {
-    if (brandData.addedBrands.length === 0) {
-      alert("Please add at least one brand before saving");
-      return;
+      if (response.error) {
+        alert("Error adding brand: " + response.error);
+      } else {
+        // Navigate to brand management page after successfully adding
+        toast.success("Your Brand has been added successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        navigate("/brand-management");
+      }
+    } catch (error) {
+      console.error("Error submitting brand:", error);
+      alert("Failed to submit brand");
     }
-    console.log("Brand Data: ", brandData);
-    navigate("/brand-management");
   };
 
   return (
     <>
       <PageHeader title="Add Brand" />
+      <ToastContainer /> 
+
 
       <div className="bg-widget flex items-center justify-center w-full py-10 px-4 lg:p-[60px]">
         <Spring
@@ -154,7 +143,7 @@ const AddBrand = () => {
                 {brandData.brandImage ? (
                   <div className="relative h-full w-full">
                     <img
-                      src={brandData.brandImage}
+                      src={URL.createObjectURL(brandData.brandImage)}
                       alt="Brand Preview"
                       className="h-full w-full object-cover"
                     />
@@ -172,114 +161,34 @@ const AddBrand = () => {
               </div>
             </div>
 
-            {/* Suitable Category Dropdown */}
+            {/* Suitable Categories Dropdown with Multiple Checkboxes */}
             <div className="field-wrapper">
-              <label htmlFor="suitableCategory" className="field-label">
-                Suitable Category<span className="text-red-500">*</span>
+              <label className="field-label">
+                Suitable Categories<span className="text-red-500">*</span>
               </label>
-              <select
-                className="field-input"
-                id="suitableCategory"
-                required
-                value={brandData.suitableCategory}
-                onChange={(e) =>
-                  setBrandData({
-                    ...brandData,
-                    suitableCategory: e.target.value,
-                  })
-                }
-              >
-                <option value="">Select Category</option>
-                {categories.map((category, index) => (
-                  <option key={index} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Add or Update Brand Button */}
-            <div className="flex justify-center gap-5">
-              {editIndex !== null ? (
-                <button
-                  type="button"
-                  className="btn btn--primary px-10 py-3"
-                  onClick={handleUpdateBrand}
-                >
-                  Update Brand
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn--primary px-10 py-3"
-                  onClick={handleBrandAdd}
-                >
-                  Add Brand
-                </button>
-              )}
-            </div>
-
-            {/* Added Brands Table */}
-            {brandData.addedBrands.length > 0 && (
-              <div className="brand-properties-table mt-6">
-                <h3 className="text-lg font-bold mb-4">Added Brands</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse border border-gray-300">
-                    <thead>
-                      <tr className="bg-gray-200">
-                        <th className="border border-gray-300 p-2">S.No</th>
-                        <th className="border border-gray-300 p-2">Name</th>
-                        <th className="border border-gray-300 p-2">Category</th>
-                        <th className="border border-gray-300 p-2">Image</th>
-                        <th className="border border-gray-300 p-2">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {brandData.addedBrands.map((brand, index) => (
-                        <tr key={brand.id} className="hover:bg-gray-100">
-                          <td className="border border-gray-300 p-2">
-                            {index + 1}
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {brand.brandName}
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {brand.suitableCategory}
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {brand.brandImage ? (
-                              <img
-                                src={brand.brandImage}
-                                alt="Brand"
-                                className="h-12 w-12 object-cover"
-                              />
-                            ) : (
-                              "No Image"
-                            )}
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            <button
-                              type="button"
-                              className="text-blue-500 mr-2"
-                              onClick={() => handleEditBrand(index)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="text-red-500"
-                              onClick={() => handleDeleteBrand(brand.id)}
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="max-h-48 overflow-y-auto p-2 border border-gray-300 rounded-md">
+                {loading ? (
+                  <p>Loading...</p>
+                ) : error ? (
+                  <p>{error}</p>
+                ) : (
+                  categories.map((category, index) => (
+                    <div key={category.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`category-${category.id}`}
+                        value={category.name}
+                        checked={brandData.suitableCategories.includes(category.name)}
+                        onChange={() => handleCategoryChange(category.name)}
+                      />
+                      <label htmlFor={`category-${category.id}`} className="ml-2">
+                        {category.name}
+                      </label>
+                    </div>
+                  ))
+                )}
               </div>
-            )}
+            </div>
 
             {/* Submit Brand Button */}
             <div className="flex justify-center gap-5 mt-6">

@@ -3,7 +3,7 @@ import Search from "../ui/Search";
 import Headroom from "react-headroom";
 //import CustomTooltip from "../ui/CustomTooltip";
 import NotificationsPanel from "../components/NotificationsPanel";
-import MessagesPanel from "../components/MessagesPanel";
+// import MessagesPanel from "../components/MessagesPanel";
 import ModalBase from "../ui/ModalBase";
 
 // hooks
@@ -50,7 +50,7 @@ const AppBar = () => {
   // const navigate = useNavigate();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [notificationsPanelOpen, setNotificationsPanelOpen] = useState(false);
-  const [messagesPanelOpen, setMessagesPanelOpen] = useState(false);
+  // const [messagesPanelOpen, setMessagesPanelOpen] = useState(false);
   // const [locale, setLocale] = useState("en-EN");
   const { width } = useWindowSize();
   const { theme, toggleTheme } = useTheme();
@@ -125,7 +125,7 @@ const AppBar = () => {
                 </span>
               </span>
             </div> */}
-            <div className="relative h-fit mb-1.5 xl:self-end xl:mt-0 xl:mr-1.5">
+            {/* <div className="relative h-fit mb-1.5 xl:self-end xl:mt-0 xl:mr-1.5">
               <button
                 className="text-lg leading-none text-gray dark:text-gray-red xl:text-[20px]"
                 onClick={() => setMessagesPanelOpen(true)}
@@ -133,7 +133,7 @@ const AppBar = () => {
               >
                 <i className="icon-message-solid" />
               </button>
-            </div>
+            </div>*/}
             <div className="relative">
               <button
                 className="h-8 w-8 rounded-full bg-accent text-widget text-sm flex items-center
@@ -141,7 +141,7 @@ const AppBar = () => {
                 onClick={logoutFun}
                 aria-label="Account menu"
               >
-                <i className="icon-user-solid" />
+                <i className="icon-caret-right-solid" />
               </button>
               <span className="badge-online" />
             </div>
@@ -164,11 +164,11 @@ const AppBar = () => {
         onOpen={() => setNotificationsPanelOpen(true)}
         onClose={() => setNotificationsPanelOpen(false)}
       />
-      <MessagesPanel
+     {/* <MessagesPanel
         open={messagesPanelOpen}
         onOpen={() => setMessagesPanelOpen(true)}
         onClose={() => setMessagesPanelOpen(false)}
-      />
+      />*/}
     </>
   );
 };

@@ -1,303 +1,333 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Select from "../../ui/Select";
-import StyledTable from "./styles";
-import Empty from "../../components/Empty";
-import Pagination from "../../ui/Pagination";
-import { useWindowSize } from "react-use";
-import { BRAND_OPTIONS } from "../../constants/options"; // Brand filter options
-import { Switch } from "antd";
-import usePagination from "../../hooks/usePagination";
+import { useParams, useNavigate } from "react-router-dom";
+import PageHeader from "../layout/PageHeader";
+import Spring from "../components/Spring";
+import Services from "../pages/Services/Services";
 
-const BrandManagementTable = () => {
-  const { width } = useWindowSize();
+const AddCarForm2 = () => {
+  const { model } = useParams(); // Get the model ID from the URL
   const navigate = useNavigate();
 
-  // Static brand data
-  const [staticData, setStaticData] = useState([
-    {
-      id: 1,
-      name: "Brand A",
-      logo: "https://via.placeholder.com/50",
-      promo: "Promo A",
-      status: true,
-    },
-    {
-      id: 2,
-      name: "Brand B",
-      logo: "https://via.placeholder.com/50",
-      promo: "Promo B",
-      status: false,
-    },
-    {
-      id: 3,
-      name: "Brand C",
-      logo: "https://via.placeholder.com/50",
-      promo: "Promo C",
-      status: true,
-    },
-  ]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [transmissionTypes, setTransmissionTypes] = useState({});
+  const [fuelTypes, setFuelTypes] = useState({});
+  const [availableYears, setAvailableYears] = useState([]);
+  const [transmissionOptions, setTransmissionOptions] = useState([]);
+  const [fuelOptions, setFuelOptions] = useState([]);
+  const [errors, setErrors] = useState({
+    selectedYears: "",
+    transmissionTypes: {},
+    fuelTypes: {},
+  });
 
-  const [filteredData, setFilteredData] = useState(staticData);
-  const [brand, setBrand] = useState("all");
-  const [editingRowId, setEditingRowId] = useState(null);
-  const [editableData, setEditableData] = useState({});
-  const pagination = usePagination(filteredData, 10);
-
-  // Clear all filters
-  const handleClearFilters = () => {
-    setBrand("all");
-    setFilteredData(staticData);
-  };
-
-  // Toggle status (active/inactive) for a brand
-  const toggleStatus = (id) => {
-    const updatedData = staticData.map((item) =>
-      item.id === id ? { ...item, status: !item.status } : item
-    );
-    setStaticData(updatedData);
-    setFilteredData(updatedData);
-  };
-
-  // Edit functionality
-  const handleEditClick = (record) => {
-    setEditingRowId(record.id);
-    setEditableData({ ...record });
-  };
-
-  const handleInputChange = (e, fieldName) => {
-    setEditableData({
-      ...editableData,
-      [fieldName]: e.target.value,
-    });
-  };
-
-  const handleSave = () => {
-    const updatedData = staticData.map((item) =>
-      item.id === editingRowId ? { ...item, ...editableData } : item
-    );
-    setStaticData(updatedData);
-    setFilteredData(updatedData);
-    setEditingRowId(null);
-  };
-
-  const handleCancel = () => {
-    setEditingRowId(null);
-  };
-
-  // Delete functionality
-  const handleDelete = (record) => {
-    if (window.confirm(`Are you sure you want to delete ${record.name}?`)) {
-      const updatedData = staticData.filter((item) => item.id !== record.id);
-      setStaticData(updatedData);
-      setFilteredData(updatedData);
-    }
-  };
-
-  // Navigate to brand details page
-  const handleBrandClick = (brandId) => {
-    navigate(`/brandDetails/${brandId}`);
-  };
-
-  // Filter data by brand
   useEffect(() => {
-    if (brand === "all") {
-      setFilteredData(staticData);
-    } else {
-      setFilteredData(staticData.filter((item) => item.name === brand));
+    const fetchCarYears = async () => {
+      try {
+        const response = await Services.getInstance().getCarYears();
+        if (response.error) {
+          console.error("Error fetching car years:", response.error);
+        } else {
+          setAvailableYears(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching car years:", error);
+      }
+    };
+
+    const fetchCarTransmissions = async () => {
+      try {
+        const response = await Services.getInstance().getCarTransmission();
+        if (response.error) {
+          console.error("Error fetching car transmissions:", response.error);
+        } else {
+          setTransmissionOptions(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching car transmissions:", error);
+      }
+    };
+
+    const fetchCarFuelTypes = async () => {
+      try {
+        const response = await Services.getInstance().getCarFuelTypes();
+        if (response.error) {
+          console.error("Error fetching car fuel types:", response.error);
+        } else {
+          setFuelOptions(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching car fuel types:", error);
+      }
+    };
+
+    fetchCarYears();
+    fetchCarTransmissions();
+    fetchCarFuelTypes();
+  }, []);
+
+  const handleToggleYear = (yearId) => {
+    setSelectedYears((prev) =>
+      prev.includes(yearId) ? prev.filter((id) => id !== yearId) : [...prev, yearId]
+    );
+    setErrors((prev) => ({ ...prev, selectedYears: "" }));
+  };
+
+  const handleTransmissionTypeChange = (year, value) => {
+    setTransmissionTypes((prev) => ({
+      ...prev,
+      [year]: Array.isArray(prev[year])
+        ? prev[year].includes(value)
+          ? prev[year].filter((id) => id !== value)
+          : [...prev[year], value]
+        : [value],
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      transmissionTypes: {
+        ...prev.transmissionTypes,
+        [year]: "",
+      },
+    }));
+  };
+
+  const handleFuelTypeChange = (year, value) => {
+    setFuelTypes((prev) => ({
+      ...prev,
+      [year]: Array.isArray(prev[year])
+        ? prev[year].includes(value)
+          ? prev[year].filter((id) => id !== value)
+          : [...prev[year], value]
+        : [value],
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      fuelTypes: {
+        ...prev.fuelTypes,
+        [year]: "",
+      },
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      selectedYears: "",
+      transmissionTypes: {},
+      fuelTypes: {},
+    };
+    let isValid = true;
+
+    if (selectedYears.length === 0) {
+      newErrors.selectedYears = "Please select at least one year.";
+      isValid = false;
     }
-  }, [brand, staticData]);
+
+    selectedYears.forEach((year) => {
+      if (!transmissionTypes[year] || transmissionTypes[year].length === 0) {
+        newErrors.transmissionTypes[year] = "At least one transmission type is required.";
+        isValid = false;
+      }
+      if (!fuelTypes[year] || fuelTypes[year].length === 0) {
+        newErrors.fuelTypes[year] = "At least one fuel type is required.";
+        isValid = false;
+      }
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      try {
+        const carDetails = selectedYears.map((yearId) => [
+          yearId,
+          transmissionTypes[yearId].map(Number),
+          fuelTypes[yearId].map(Number),
+        ]);
+
+        const formattedData = {
+          modelId: Number(model),
+          carDetails: carDetails,
+        };
+
+        console.log("Sending data:", formattedData);
+
+        const response = await Services.getInstance().addAdminCarWithFormData(formattedData);
+
+        if (response.error) {
+          alert("Error adding admin car: " + response.error);
+        } else {
+          console.log("Admin car added successfully:", response);
+          alert("Car data saved successfully!");
+          navigate("/car-model-management");
+        }
+      } catch (error) {
+        console.error("Submission error:", error);
+        alert("An error occurred while saving the car data.");
+      }
+    } else {
+      alert("Please fix the errors before submitting.");
+    }
+  };
 
   return (
-    <div className="flex flex-col flex-1">
-      {/* Filter Options */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-x-6 xl:grid-cols-6 mb-4">
-        <Select
-          options={BRAND_OPTIONS}
-          value={{ label: brand === "all" ? "All Brands" : brand, value: brand }}
-          placeholder="Select Brand"
-          onChange={(e) => setBrand(e.value)}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            className="btn btn--outline blue !h-[44px]"
-            onClick={handleClearFilters}
-          >
-            Clear
-          </button>
-        </div>
-      </div>
+    <>
+      <PageHeader title="Add Car" />
+      <div className="bg-widget w-full py-10 px-4 lg:p-[60px]">
+        <Spring
+          className="w-full"
+          type="slideUp"
+          duration={400}
+          delay={300}
+        >
+          <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-6">
+            {/* Year Selection with Checkboxes */}
+            <div className="field-wrapper bg-widget p-6 rounded-lg shadow-sm">
+              <label htmlFor="years" className="field-label block text-lg font-medium mb-4">
+                Years<span className="text-red-500">*</span>
+              </label>
+              <div className="overflow-y-auto max-h-[200px] pr-4">
+                {availableYears.map((yearObj) => (
+                  <div key={yearObj.id} className="flex items-center gap-3 mb-3">
+                    <input
+                      type="checkbox"
+                      id={`year-${yearObj.id}`}
+                      value={yearObj.id}
+                      checked={selectedYears.includes(yearObj.id)}
+                      onChange={() => handleToggleYear(yearObj.id)}
+                      className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <label htmlFor={`year-${yearObj.id}`} className="text-gray-700">
+                      {yearObj.year}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {errors.selectedYears && (
+                <p className="text-red-500 text-sm mt-2">{errors.selectedYears}</p>
+              )}
+            </div>
 
-      {/* Table or Cards */}
-      <div className="flex flex-1 flex-col gap-[22px] mt-4">
-        {width >= 768 ? (
-          <StyledTable
-            columns={[
-              {
-                title: "Sr. No.",
-                dataIndex: "id",
-                key: "id",
-                align: "center",
-                render: (_, __, index) => (
-                  <span>{pagination.pageIndex * 10 + index + 1}</span>
-                ),
-              },
-              {
-                title: "Brand Name",
-                dataIndex: "name",
-                key: "name",
-                render: (text, record) => (
-                  <button
-                    className="text-blue-500 hover:text-blue-700"
-                    onClick={() => handleBrandClick(record.id)}
-                  >
-                    {editingRowId === record.id ? (
-                      <input
-                        type="text"
-                        value={editableData.name}
-                        onChange={(e) => handleInputChange(e, "name")}
-                        className="border p-1"
-                      />
-                    ) : (
-                      text
-                    )}
-                  </button>
-                ),
-              },
-              {
-                title: "Promotion",
-                dataIndex: "promo",
-                key: "promo",
-                align: "center",
-                render: (promo, record) => (
-                  <span>
-                    {editingRowId === record.id ? (
-                      <input
-                        type="text"
-                        value={editableData.promo}
-                        onChange={(e) => handleInputChange(e, "promo")}
-                        className="border p-1"
-                      />
-                    ) : (
-                      promo
-                    )}
-                  </span>
-                ),
-              },
-              {
-                title: "Brand Image",
-                dataIndex: "logo",
-                key: "logo",
-                align: "center",
-                render: (logo) => (
-                  <img src={logo} alt="Brand Logo" className="w-[50px] h-[50px] rounded" />
-                ),
-              },
-              {
-                title: "Status",
-                dataIndex: "status",
-                key: "status",
-                align: "center",
-                render: (status, record) => (
-                  <Switch checked={status} onChange={() => toggleStatus(record.id)} />
-                ),
-              },
-              {
-                title: "Actions",
-                key: "actions",
-                align: "center",
-                render: (_, record) =>
-                  editingRowId === record.id ? (
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        className="px-3 py-1 text-green-500 hover:text-green-700"
-                        onClick={handleSave}
+            {/* Selected Years Container with improved design */}
+            {selectedYears.length > 0 && (
+              <div className="bg-gray-50 border-2 border-indigo-100 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Selected Year Models</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {selectedYears.map((yearId) => {
+                    const yearObj = availableYears.find((y) => y.id === yearId);
+                    return (
+                      <div 
+                        key={yearId} 
+                        className="bg-widget rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
                       >
-                        Save
-                      </button>
-                      <button
-                        className="px-3 py-1 text-gray-500 hover:text-gray-700"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2 justify-center">
-                      <button
-                        className="px-3 py-1 text-blue-500 hover:text-blue-700"
-                        onClick={() => handleEditClick(record)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="px-3 py-1 text-red-500 hover:text-red-700"
-                        onClick={() => handleDelete(record)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ),
-              },
-            ]}
-            dataSource={pagination.currentItems()}
-            rowKey={(record) => record.id}
-            locale={{
-              emptyText: <Empty text="No brands found" />,
-            }}
-            pagination={false}
-          />
-        ) : (
-          <div className="flex flex-col gap-5">
-            {pagination.currentItems().map((item) => (
-              <div className="card" key={`brand-${item.id}`}>
-                <h6>{item.name}</h6>
-                <img src={item.logo} alt={item.name} className="w-[50px] h-[50px] rounded" />
-                <p>Promo: {item.promo}</p>
-                <Switch checked={item.status} onChange={() => toggleStatus(item.id)} />
-                <div className="flex items-center justify-center gap-3">
-                  {editingRowId === item.id ? (
-                    <>
-                      <button
-                        className="px-3 py-1 text-green-500 hover:text-green-700"
-                        onClick={handleSave}
-                      >
-                        Save
-                      </button>
-                      <button
-                        className="px-3 py-1 text-gray-500 hover:text-gray-700"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        className="px-3 py-1 text-blue-500 hover:text-blue-700"
-                        onClick={() => handleEditClick(item)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="px-3 py-1 text-red-500 hover:text-red-700"
-                        onClick={() => handleDelete(item)}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
+                        <div className="border-b border-gray-100 p-4">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-xl text-gray-800">{yearObj?.year}</span>
+                            <button
+                              type="button"
+                              className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                              onClick={() => handleToggleYear(yearId)}
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-4">
+                          {/* Transmission Type Checkboxes */}
+                          <div className="mb-6">
+                            <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                              Transmission Types
+                            </label>
+                            <div className="space-y-2">
+                              {transmissionOptions.map((transmission) => (
+                                <div key={transmission.id} className="flex items-center gap-3">
+                                  <input
+                                    type="checkbox"
+                                    id={`transmission-${yearId}-${transmission.id}`}
+                                    value={transmission.id}
+                                    checked={
+                                      Array.isArray(transmissionTypes[yearId]) &&
+                                      transmissionTypes[yearId].includes(transmission.id)
+                                    }
+                                    onChange={() => handleTransmissionTypeChange(yearId, transmission.id)}
+                                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                  />
+                                  <label 
+                                    htmlFor={`transmission-${yearId}-${transmission.id}`}
+                                    className="text-sm text-gray-600 select-none"
+                                  >
+                                    {transmission.name}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                            {errors.transmissionTypes[yearId] && (
+                              <p className="text-red-500 text-xs mt-2">
+                                {errors.transmissionTypes[yearId]}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Fuel Type Checkboxes */}
+                          <div>
+                            <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                              Fuel Types
+                            </label>
+                            <div className="space-y-2">
+                              {fuelOptions.map((fuel) => (
+                                <div key={fuel.id} className="flex items-center gap-3">
+                                  <input
+                                    type="checkbox"
+                                    id={`fuel-${yearId}-${fuel.id}`}
+                                    value={fuel.id}
+                                    checked={
+                                      Array.isArray(fuelTypes[yearId]) &&
+                                      fuelTypes[yearId].includes(fuel.id)
+                                    }
+                                    onChange={() => handleFuelTypeChange(yearId, fuel.id)}
+                                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                  />
+                                  <label 
+                                    htmlFor={`fuel-${yearId}-${fuel.id}`}
+                                    className="text-sm text-gray-600 select-none"
+                                  >
+                                    {fuel.name}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                            {errors.fuelTypes[yearId] && (
+                              <p className="text-red-500 text-xs mt-2">
+                                {errors.fuelTypes[yearId]}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            )}
 
-        {/* Pagination */}
-        {pagination.maxPage > 1 && <Pagination pagination={pagination} />}
+            {/* Save Button */}
+            <div className="flex justify-center mt-8">
+              <button
+                type="submit"
+                className="btn btn--primary"
+              >
+                Save Car Model
+              </button>
+            </div>
+          </form>
+        </Spring>
       </div>
-    </div>
+    </>
   );
 };
 
-export default BrandManagementTable;
+export default AddCarForm2;

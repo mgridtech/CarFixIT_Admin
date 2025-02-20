@@ -63,6 +63,22 @@ import BrandDetails from "./pages/BrandDetails";
 import ProductDetails from "./pages/ProductDetails";
 import UpdateCategory from "./pages/UpdateCategory";
 import UpdateBrandDetails from "./pages/UpdateBrandDetails";
+import UpdateBrand from "./pages/UpdateBrand";
+import AddSuitableCategory from "./components/AddSuitableCategory";
+import CarBrandManagement from "./pages/CarBrandManagement";
+import AddCarBrand from "./pages/AddCarBrand";
+import UpdateCarBrand from "./pages/UpdateCarBrand";
+import CarModelManagement from "./pages/CarModelManagement";
+import AddCar from "./pages/AddCar";
+import UpdateCarModel from "./pages/UpdateCarModel";
+import AddCarForm1 from "./components/AddCarForm1";
+import AddCarForm2 from "./components/AddCarForm2";
+import OrderManagement from "./pages/OrderManagement";
+import OrderDetails from "./pages/OrderDetails";
+import UserManagement from "./pages/UserManagement";
+import CarByModelManagement from "./pages/CarByModelManagement";
+import UpdateCarbyModel from "./pages/UpdateCarbyModel";
+import AddCarByModel from "./pages/AddCarByModel";
 
 // pages
 const Login = lazy(() => import("./pages/Login"));
@@ -364,15 +380,15 @@ function App() {
                       }
                     />
                     <Route
-                    path="/updateCategory/:id"
-                    element={
-                      isAuth === "Authenticated" ? (
-                        <UpdateCategory />
-                      ) : (
-                        <Navigate to="/" />
-                      )
-                    }
-                  />
+                      path="/updateCategory/:id"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <UpdateCategory />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
                     <Route
                       path="brand-management"
                       element={
@@ -384,17 +400,17 @@ function App() {
                       }
                     />
                     <Route
-                    path="/updateBrandDetail/:id"
-                    element={
-                      isAuth === "Authenticated" ? (
-                        <UpdateBrandDetails />
-                      ) : (
-                        <Navigate to="/" />
-                      )
-                    }
-                  />
+                      path="/updateBrandDetail/:id"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <UpdateBrandDetails />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
                     <Route
-                      path="/editProduct/:id/:refer"
+                      path="/updateProduct/:id"
                       element={
                         isAuth === "Authenticated" ? (
                           <UpdateProduct />
@@ -403,7 +419,7 @@ function App() {
                         )
                       }
                     />
-                        <Route
+                    <Route
                       path="addProducts"
                       element={
                         isAuth === "Authenticated" ? (
@@ -434,6 +450,16 @@ function App() {
                       }
                     />
                     <Route
+                      path="/update/:productBrandId/brand"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <UpdateBrand />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
                       path="/brandDetails/:id"
                       element={
                         isAuth === "Authenticated" ? (
@@ -443,16 +469,178 @@ function App() {
                         )
                       }
                     />
+                    {/* <Route
+                      path="add-suitableCategory"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <AddSuitableCategory />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    /> */}
                     <Route
-                    path="/productDetails/:id"
+                      path="/brandDetails/:id/add-suitableCategory"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <AddSuitableCategory />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/productDetails/:productId"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <ProductDetails />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+
+                    <Route
+                      path="/car-brand-management"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <CarBrandManagement />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/addCarBrand"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <AddCarBrand />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/updateCarBrand/:id"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <UpdateCarBrand />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/car-model-management"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <CarModelManagement />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/addCarModel"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <AddCar />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/add-car-form1"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <AddCarForm1 />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                      path="/add-car-form2/:model"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <AddCarForm2 />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+
+                    <Route
+                      path="/UpdateCarModel/:id"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <UpdateCarModel />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                    path="/adminCar/:modelId/CarsByModel"
                     element={
                       isAuth === "Authenticated" ? (
-                        <ProductDetails />
+                        <CarByModelManagement />
                       ) : (
                         <Navigate to="/" />
                       )
                     }
                   />
+                  <Route
+                  path="/adminCar/:modelId/update"
+                  element={
+                    isAuth === "Authenticated" ? (
+                      <UpdateCarbyModel />
+                    ) : (
+                      <Navigate to="/" />
+                    )
+                  }
+                />
+                <Route
+                path="/adminCar/:modelId/addcarbymodel"
+                element={
+                  isAuth === "Authenticated" ? (
+                    <AddCarByModel />
+                  ) : (
+                    <Navigate to="/" />
+                  )
+                }
+              />
+                    <Route
+                      path="/Order-management"
+                      element={
+                        isAuth === "Authenticated" ? (
+                          <OrderManagement />
+                        ) : (
+                          <Navigate to="/" />
+                        )
+                      }
+                    />
+                    <Route
+                    path="/orderDetails/:orderId"
+                    element={
+                      isAuth === "Authenticated" ? (
+                        <OrderDetails />
+                      ) : (
+                        <Navigate to="/" />
+                      )
+                    }
+                  />
+                  <Route
+                  path="/user-management"
+                  element={
+                    isAuth === "Authenticated" ? (
+                      <UserManagement />
+                    ) : (
+                      <Navigate to="/" />
+                    )
+                  }
+                />
                     <Route
                       path="banners"
                       element={

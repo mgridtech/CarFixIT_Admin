@@ -29,6 +29,40 @@ const ROUTES = [
     icon: "circle-plus-regular",
   },
 
+  {
+    name: "Car Management",
+    path: "/car-management",
+    icon: "circle-plus-regular",
+    links: [
+      {
+        name: "Car Brand Management",
+        path: "/car-brand-management",
+    // path: "/car-management",
+
+      },
+      {
+        name: "Car Model Management",
+        path: "/car-model-management",
+      },
+      // {
+      //   name: "Admin Car",
+      //   path: "/admin-car",
+      // },
+    ],
+  },
+
+  {
+    name: "Order Management",
+    path: "/Order-management",
+    icon: "circle-plus-regular",
+  },
+
+  // {
+  //   name: "User Management",
+  //   path: "/user-management",
+  //   icon: "circle-plus-regular",
+  // },
+
   // {
   //   name: "Update Category",
   //   path: "/updateCategory/:id",

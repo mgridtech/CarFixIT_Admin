@@ -1,790 +1,867 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../layout/PageHeader";
 import Spring from "../components/Spring";
-import { useState } from "react";
-import classNames from "classnames";
-import { toast } from "react-toastify";
-import trash from "../assets/icons/trash.svg";
-import { UpdateDataWithId } from "../db/databaseFunction";
-import { useNavigate, useParams } from "react-router-dom";
-import { useEffect } from "react";
-import { useSelector } from "react-redux";
-import DropFiles from "../components/DropFiles";
-import { uploadTheImage } from "../db/databaseFunction";
-import MultiSelectDropdown from "../components/MultiSelectDropdown.js"; // Import the new component
+import Services from "./Services/Services";
 
 const UpdateProduct = () => {
-  const [isLoadingModal, setisLoadingModal] = useState(false);
-  const { adminCarsData } = useSelector((state) => state.project);
-  // const [compatibleValue, setcompatibleValue] = useState("");
-  const [compatibleVehicles, setcompatibleVehicles] = useState([]);
-  const [selectedVehicles, setSelectedVehicles] = useState([]);
-
-  const [imagesArray, setimagesArray] = useState([]);
-  const { id, refer } = useParams();
-  const {
-    filtersData,
-    oilsData,
-    tireData,
-    batteryData,
-    engineOilData,
-    engineOilPetrolData,
-  } = useSelector((state) => state.project);
   const navigate = useNavigate();
-  const [formData, setformData] = useState({
-    nameEng: "",
-    nameArab: "",
-    descEng: "",
-    descArab: "",
-    ogPrice: "",
-    cmPrice: "",
-    type: refer,
-    warenty: "",
-    skuId: "",
-    quantity: 0, // Add this line
+  const { id } = useParams();
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [product, setProduct] = useState(null);
+  const [productData, setProductData] = useState({});
+  const [activeProductStatus, setActiveProductStatus] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [categoryType, setCategoryType] = useState("");
+  const [properties, setProperties] = useState([]);
+  const [primaryImage, setPrimaryImage] = useState(null);
+  const [editedServiceName, setEditedServiceName] = useState("");
+  const [editingState, setEditingState] = useState({
+    serviceIndex: null,
+    serviceName: "",
+    propertyIndex: null,
+    propertyValue: "",
   });
-  const [diemensionAaay, setdiemensionAaay] = useState([]);
-  const [diemsensionValue, setdiemsensionValue] = useState({
-    engName: "",
-    arabName: "",
-    value: "",
-  });
+  const [isEditingImages, setIsEditingImages] = useState(false);
+  const [tempImages, setTempImages] = useState([]);
+  const [tempPrimaryImage, setTempPrimaryImage] = useState(null);
 
   useEffect(() => {
-    const findCurrentData = () => {
-      const dataApproch =
-        refer === "Oils"
-          ? oilsData
-          : refer === "Filters"
-          ? filtersData
-          : refer === "Tyres"
-          ? tireData
-          : refer === "btteries"
-          ? batteryData
-          : refer === "engineOil"
-          ? engineOilData
-          : refer === "engineOilPetrol"
-          ? engineOilPetrolData
-          : refer === "Filters"
-          ? filtersData
-          : [];
-      const fiLterDataNow = dataApproch.filter((dat) => dat.dbId === id);
-      setformData({
-        nameEng: fiLterDataNow[0]?.productNameEng
-          ? `${fiLterDataNow[0]?.productNameEng}`
-          : "",
-        nameArab: fiLterDataNow[0]?.productNameArab
-          ? `${fiLterDataNow[0]?.productNameArab}`
-          : "",
-        descEng: fiLterDataNow[0]?.productDescEng
-          ? `${fiLterDataNow[0]?.productDescEng}`
-          : "",
-        descArab: fiLterDataNow[0]?.productDescArab
-          ? `${fiLterDataNow[0]?.productDescArab}`
-          : "",
-        ogPrice: fiLterDataNow[0]?.originalPrice
-          ? `${fiLterDataNow[0]?.originalPrice}`
-          : "",
-        cmPrice: fiLterDataNow[0]?.commercialPrice
-          ? `${fiLterDataNow[0]?.commercialPrice}`
-          : "",
-        quantity: fiLterDataNow[0]?.quantity
-          ? `${fiLterDataNow[0]?.quantity}`
-          : "",
-        type: fiLterDataNow[0]?.reference,
-        warenty: fiLterDataNow[0]?.warenty
-          ? `${fiLterDataNow[0]?.warenty}`
-          : "",
-        skuId: fiLterDataNow[0]?.skuId
-          ? fiLterDataNow[0]?.skuId
-          : fiLterDataNow[0]?.dbId,
-      });
-      setdiemensionAaay(fiLterDataNow[0].productDiemensions);
-      setimagesArray(
-        fiLterDataNow[0]?.images?.length > 0 ? fiLterDataNow[0]?.images : []
-      );
-      setcompatibleVehicles(
-        fiLterDataNow[0]?.suitableVehicles?.length > 0
-          ? fiLterDataNow[0]?.suitableVehicles
-          : []
-      );
+    const fetchProductDetails = async () => {
+      setLoading(true);
+      try {
+        const response = await Services.getInstance().getProductById(id);
+        if (response.data) {
+          setProduct(response.data);
+          const fetchedData = {
+            category: response.data.categoryInfo.categoryType,
+            skuid: response.data.skuId || "",
+            name: response.data.name,
+            quantity: response.data.quantity || 0,
+            videoUrl: response.data.video || "",
+            status: response.data.status,
+            price: response.data.price,
+            brand: response.data.brandName || "",
+            properties: response.data.properties || [],
+            images: response.data.images.map((img) => img.image_data),
+            services: response.data.services || [],
+          };
+          setProductData(fetchedData);
+          setProperties(fetchedData.properties);
+          setPrimaryImage(
+            fetchedData.images.find((img) => img.is_primary) || null
+          );
+          setTempImages([...fetchedData.images]);
+          setTempPrimaryImage(
+            fetchedData.images.find((img) => img.is_primary) || null
+          );
+        } else {
+          setError("Product not found");
+        }
+      } catch (error) {
+        setError("Failed to fetch product details");
+        console.error("Error fetching product details:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    if (
-      (refer === "Oils" ||
-        refer === "Filters" ||
-        refer === "engineOil" ||
-        refer === "engineOilPetrol" ||
-        refer === "Tyres" ||
-        refer === "btteries") &&
-      id.length > 0
-    ) {
-      findCurrentData();
-    } else {
-      navigate("/404");
+    fetchProductDetails();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchBrandsByCategory = async () => {
+      if (!productData.category || categoryType !== "ecommerce") {
+        setBrands([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const brandsResponse = await Services.getInstance().getProductBrands(
+          productData.category
+        );
+        if (brandsResponse.error) throw new Error(brandsResponse.error);
+        setBrands(brandsResponse.data || []);
+      } catch (error) {
+        setError(error.message);
+        console.error("Error fetching brands:", error);
+        setBrands([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrandsByCategory();
+  }, [productData.category, categoryType]);
+
+  useEffect(() => {
+    const fetchActiveProductStatus = async () => {
+      if (!productData.category) return;
+
+      setLoading(true);
+      try {
+        const response = await Services.getInstance().getActiveProductStatus(
+          productData.category
+        );
+        if (response.error) throw new Error(response.error);
+
+        console.log("Active Product Status Data:", response.data);
+        setActiveProductStatus(response.data || []);
+      } catch (error) {
+        console.error("Error fetching active product status:", error);
+        setError(error.message);
+        setActiveProductStatus([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActiveProductStatus();
+  }, [productData.category]);
+
+  useEffect(() => {
+    if (product?.images?.length > 0) {
+      // Map images to include both image_data and id
+      setTempImages(product.images.map(img => ({
+        image_data: img.image_data,
+        id: img.id,
+      })));
+  
+      // Find the primary image
+      const primary = product.images.find(img => img.is_primary);
+      setTempPrimaryImage(primary ? primary.image_data : null);
+      
+      console.log("Loaded Images:", product.images);
+      console.log("Primary Image Set:", primary ? primary.image_data : "None");
     }
-  }, [
-    id,
-    refer,
-    batteryData,
-    filtersData,
-    navigate,
-    oilsData,
-    tireData,
-    engineOilData,
-    engineOilPetrolData,
-  ]);
+  }, [product]);
+  
+  const handleSetPrimary = (image) => {
+    setTempPrimaryImage((prev) => (prev === image ? null : image));
+    console.log("Primary Image Updated:", image);
+  };
+  
+const handleImageRemove = async (index, imageId) => {
+  try {
+    console.log("Removing Image:", imageId);
 
-  const handlePasswordReminder = async (e) => {
-    e.preventDefault();
+    // Call API to delete image
+    const response = await Services.getInstance().deleteProductImage(imageId);
 
-    const extraData = {
-      warenty: formData?.warenty
-        ? Number(parseFloat(formData.warenty).toFixed(1))
-        : 0,
-      productDiemensions: diemensionAaay
-        ? diemensionAaay.map((dat, index) => {
-            return { ...dat, id: index };
-          })
-        : [],
-    };
-    const dataToPost = {
-      skuId: formData?.skuId,
-      originalPrice: Number(parseFloat(formData.ogPrice).toFixed(2)),
-      productDescArab: formData.descArab,
-      productDescEng: formData.descEng,
-      productNameArab: formData.nameArab,
-      productNameEng: formData.nameEng,
-      images: imagesArray,
-      suitableVehicles: compatibleVehicles,
-      quantity: parseInt(formData.quantity, 10), // Add this line to ensure quantity is an integer
-    };
-    const commercialObject = {
-      commercialPrice: Number(parseFloat(formData.cmPrice).toFixed(2)),
-    };
-    const finaldata = {
-      ...dataToPost,
-      ...(formData.type !== "Oils" &&
-      formData.type !== "Filters" &&
-      formData.type !== "engineOil" &&
-      formData.type !== "engineOilPetrol" &&
-      formData.type !== ""
-        ? extraData
-        : {}),
-      ...(formData.type === "Filters" && formData.type !== ""
-        ? commercialObject
-        : {}),
-    };
-    if (compatibleVehicles?.length > 0) {
-      if (imagesArray?.length > 0) {
-        await UpdateDataWithId(formData.type, id, { ...finaldata })
-          .then(() => {
-            toast.success("Product Updated");
-            navigate(-1);
-          })
-          .catch((e) => toast.error("Error" + e));
-      } else {
-        toast.error("Please Upload atleast one product image");
+    if (response.error) {
+      console.error("Error deleting image:", response.error);
+      return;
+    }
+
+    // Update state only if API call is successful
+    setTempImages((prev) => {
+      const updatedImages = prev.filter((_, i) => i !== index);
+      console.log("Updated Image List After Deletion:", updatedImages);
+      return updatedImages;
+    });
+
+    // If the deleted image was the primary image, reset primary image state
+    if (tempImages[index] === tempPrimaryImage) {
+      setTempPrimaryImage(null);
+      console.log("Primary Image Removed");
+    }
+
+    console.log("Image deleted successfully");
+  } catch (error) {
+    console.error("Failed to remove image:", error);
+  }
+};
+
+  
+const handleImageUpload = (event) => {
+  const files = event.target.files;
+  if (files.length > 0) {
+    const newImages = Array.from(files).map((file) => ({
+      image_data: URL.createObjectURL(file),
+      id: `temp-${Date.now()}`, // Generate a temporary ID for new images
+    }));
+
+    // Only allow one image to be uploaded
+    if (tempImages.length + newImages.length <= 1) {
+      setTempImages((prev) => {
+        const updatedImages = [...prev, ...newImages];
+        console.log("Updated Image List After Upload:", updatedImages);
+        return updatedImages;
+      });
+
+      // Automatically set the uploaded image as primary
+      if (newImages.length > 0) {
+        setTempPrimaryImage(newImages[0].image_data);
+        console.log("Primary Image Automatically Set:", newImages[0].image_data);
       }
     } else {
-      toast.error("Please Add atleast one vehicle");
+      alert("You can only upload one image.");
     }
-  };
-  const removeImageFromDb = async (index) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete number ${index + 1} image ?`
-      )
-    ) {
-      return;
-    } else {
-      setisLoadingModal(true);
-      setimagesArray(imagesArray.filter((dat, indexs) => index !== indexs));
-      setisLoadingModal(false);
-    }
-  };
-  const uploadImageFunction = async (e) => {
-    setisLoadingModal(true);
-    await uploadTheImage(e[0])
-      .then(async (dat) => {
-        if (dat) {
-          setimagesArray(
-            imagesArray?.length > 0
-              ? [...imagesArray, { imgLink: dat }]
-              : [{ imgLink: dat }]
-          );
-          toast.success("Image Uploaded.");
-        }
-      })
-      .catch((e) => {
-        toast.error("Error" + e);
-      });
-    setisLoadingModal(false);
+  }
+};                                                                                
+
+  
+const handleSaveImages = () => {
+  setProductData((prev) => ({
+    ...prev,
+    images: tempImages.map((img) => ({
+      image_data: img.image_data,
+      id: img.id,
+      is_primary: img.image_data === tempPrimaryImage, // Mark primary image
+    })),
+    primaryImage: tempPrimaryImage,
+  }));
+
+  console.log("Final Image List:", tempImages);
+  console.log("Final Primary Image:", tempPrimaryImage);
+
+  setIsEditingImages(false);
+};  
+  
+  const handleAddService = () => {
+    if (!editedServiceName.trim()) return;
+    setProductData((prev) => ({
+      ...prev,
+      services: [...prev.services, editedServiceName.trim()],
+    }));
+    setEditedServiceName("");
   };
 
-  const handleAddCompatibleVehicles = () => {
-    if (selectedVehicles.length > 0) {
-      // Filter out vehicles already in the compatibleVehicles state to avoid duplicates
-      const newVehicles = selectedVehicles.filter(
-        (vehicle) =>
-          !compatibleVehicles.some((existing) => existing.dbId === vehicle.dbId)
+  const handleDeleteService = (service) => {
+    setProductData((prev) => ({
+      ...prev,
+      services: prev.services.filter((s) => s !== service),
+    }));
+  };
+
+  const handleEditService = (index) => {
+    setEditingState({
+      ...editingState,
+      serviceIndex: index,
+      serviceName: productData.services[index],
+    });
+  };
+
+  const saveEditedService = () => {
+    if (!editingState.serviceName.trim()) return;
+    const updatedServices = [...productData.services];
+    updatedServices[editingState.serviceIndex] =
+      editingState.serviceName.trim();
+    setProductData({ ...productData, services: updatedServices });
+    setEditingState({ ...editingState, serviceIndex: null, serviceName: "" });
+  };
+
+  const cancelEdit = () => {
+    setEditingState({ ...editingState, serviceIndex: null, serviceName: "" });
+  };
+
+  const handleProductUpdate = () => {
+    // Validate required fields
+      // const requiredFields =
+      //   productData.category === "ecommerce"
+      //     ? ["name", "price", "brand", "skuid", "quantity", "status"]
+      //     : ["name", "price", "status"];
+    
+      // const missingFields = requiredFields.filter((field) => !productData[field]);
+    
+      // if (missingFields.length > 0) {
+      //   alert(`Please fill in all required fields: ${missingFields.join(", ")}`);
+      //   return;
+      // }
+  
+    // Prepare the updated product data
+    const updatedProductData = {
+      name: productData.name,
+      price: productData.price,
+      status: productData.status,
+      videoUrl: productData.videoUrl || "", // Optional for ecommerce, required for service
+    };
+  
+    // Add ecommerce-specific fields if category is "ecommerce"
+    if (productData.category === "ecommerce") {
+      updatedProductData.brand = productData.brand;
+      updatedProductData.skuid = productData.skuid;
+      updatedProductData.quantity = productData.quantity;
+    }
+  
+    // Set the updated data in editingState
+    setEditingState((prev) => ({
+      ...prev,
+      productData: updatedProductData,
+    }));
+  
+    // Call saveEditedProduct to update the product
+    saveEditedProduct();
+  };
+  
+  const saveEditedProduct = async () => {
+    try {
+      console.log("Updating Product ID:", id); // id from useParams()
+      console.log("Updated Product Data:", editingState.productData);
+  
+      // Call the API to update the product
+      const response = await Services.getInstance().updateProduct(
+        id, // Product ID from useParams()
+        editingState.productData // Updated product data object
       );
-
-      setcompatibleVehicles([...compatibleVehicles, ...newVehicles]);
-      setSelectedVehicles([]); // Clear the selected vehicles after adding
-      toast.success("Vehicles added successfully");
-    } else {
-      toast.error("Please select at least one vehicle");
+  
+      console.log("API Response:", response);
+  
+      if (response.error) {
+        setError(response.error);
+      } else {
+        // Update the local state to reflect the changes
+        setProductData((prevData) => ({
+          ...prevData,
+          ...editingState.productData,
+        }));
+  
+        // Reset the editing state
+        setEditingState({
+          ...editingState,
+          productData: {},
+        });
+  
+        // Navigate back to the products management page
+        navigate("/products-management");
+      }
+    } catch (error) {
+      setError("Failed to update product");
+      console.error("Error updating product:", error);
     }
   };
 
+  const handleValueChange = (index, newValue) => {
+    setProperties((prev) => {
+      const updated = [...prev];
+      updated[index].value = newValue;
+      return updated;
+    });
+  };
+
+  const handleEditProperty = (index, value) => {
+    setEditingState({
+      ...editingState,
+      propertyIndex: index,
+      propertyValue: value,
+    });
+  };
+
+  const saveEditedProperty = async (index) => {
+    try {
+      const property = properties[index];
+  
+      console.log("Updating Property for Category:", productData.category);
+      console.log("Updating Property ID:", property.id, "Value:", editingState.propertyValue);
+  
+      const response = await Services.getInstance().updateProductProperty(
+        id, // productId from useParams()
+        property.id, // propertyId
+        editingState.propertyValue // Only updating value
+      );
+  
+      console.log("API Response:", response);
+  
+      if (response.error) {
+        setError(response.error);
+      } else {
+        // Update the local state to reflect the changes
+        const updatedProperties = [...properties];
+        updatedProperties[index].value = editingState.propertyValue;
+        setProperties(updatedProperties);
+  
+        // Reset the editing state
+        setEditingState({
+          ...editingState,
+          propertyIndex: null,
+          propertyValue: "",
+        });
+      }
+    } catch (error) {
+      setError("Failed to update property");
+      console.error("Error updating property:", error);
+    }
+  };
+  
+  // const saveEditedProduct = async () => {
+  //   try {
+  //     console.log("Updating Product ID:", id); // id from useParams()
+  //     console.log("Updated Product Data:", editingState.productData);
+  
+  //     const response = await Services.getInstance().updateProduct(
+  //       id, // Product ID from useParams()
+  //       editingState.productData // Updated product data object
+  //     );
+  
+  //     console.log("API Response:", response);
+  
+  //     if (response.error) {
+  //       setError(response.error);
+  //     } else {
+  //       // Update the local state to reflect the changes
+  //       setProductData((prevData) => ({
+  //         ...prevData,
+  //         ...editingState.productData,
+  //       }));
+  
+  //       // Reset the editing state
+  //       setEditingState({
+  //         ...editingState,
+  //         productData: {},
+  //       });
+  //     }
+  //   } catch (error) {
+  //     setError("Failed to update product");
+  //     console.error("Error updating product:", error);
+  //   }
+  // };
+  
+  
+    const cancelEditProperty = () => {
+    setEditingState({
+      ...editingState,
+      propertyIndex: null,
+      propertyValue: "",
+    });
+  };
+
+  const renderServiceInput = () => (
+    <div className="col-span-2 mt-5">
+      <label htmlFor="serviceName" className="field-label">
+        Add Service Name
+      </label>
+      <div className="flex items-center space-x-4">
+        <input
+          type="text"
+          id="serviceName"
+          className="field-input w-full md:w-2/3"
+          value={editedServiceName}
+          onChange={(e) => setEditedServiceName(e.target.value)}
+          placeholder="Enter Service Name"
+        />
+        <button
+          type="button"
+          className="btn btn--primary ml-4"
+          onClick={handleAddService}
+        >
+          Add
+        </button>
+      </div>
+      <div className="mt-5">
+        <h4 className="font-semibold mb-3">Added Services:</h4>
+        <ul className="space-y-3">
+          {productData.services.map((service, index) => (
+            <li
+              key={index}
+              className="flex justify-between items-center bg-gray-100 rounded-md p-3 shadow-md"
+            >
+              {editingState.serviceIndex === index ? (
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    className="field-input"
+                    value={editingState.serviceName}
+                    onChange={(e) =>
+                      setEditingState({
+                        ...editingState,
+                        serviceName: e.target.value,
+                      })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="btn btn--primary text-xs"
+                    onClick={saveEditedService}
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--secondary text-xs"
+                    onClick={cancelEdit}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center w-full">
+                  <span>{service}</span>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      className="text-blue-500 text-xs hover:text-blue-700"
+                      onClick={() => handleEditService(index)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="text-red-500 text-xs hover:text-red-700"
+                      onClick={() => handleDeleteService(service)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+
+  const renderPropertiesTable = () => (
+    <div className="col-span-2 mt-5">
+      <h3 className="text-lg font-semibold mb-3">Properties</h3>
+      <table className="w-full border border-gray-300">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border px-4 py-2">Sr. No.</th>
+            <th className="border px-4 py-2">Name</th>
+            <th className="border px-4 py-2">Description</th>
+            <th className="border px-4 py-2">Value</th>
+            <th className="border px-4 py-2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {  properties.map((property, index) => (
+            <tr key={index} className="text-center">
+              <td className="border px-4 py-2">{index + 1}</td>
+              <td className="border px-4 py-2">{property.name}</td>
+              <td className="border px-4 py-2">{property.description}</td>
+              <td className="border px-4 py-2">
+                {editingState.propertyIndex === index ? (
+                  <input
+                    type="text"
+                    value={editingState.propertyValue}
+                    onChange={(e) =>
+                      setEditingState({
+                        ...editingState,
+                        propertyValue: e.target.value,
+                      })
+                    }
+                    className="field-input w-full"
+                  />
+                ) : (
+                  property.value || "N/A"
+                )}
+              </td>
+              <td className="border px-4 py-2">
+                {editingState.propertyIndex === index ? (
+                  <div className="flex space-x-2 justify-center">
+                    <button
+                      type="button"
+                      className="btn btn--primary text-xs"
+                      onClick={() => saveEditedProperty(index)}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--secondary text-xs"
+                      onClick={cancelEditProperty}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      className="btn btn--secondary text-xs"
+                      onClick={() => handleEditProperty(index, property.value)}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  console.log("product data here", product);
   return (
     <>
       <PageHeader title="Update Product" />
       <div className="bg-widget flex items-center justify-center w-full py-10 px-4 lg:p-[60px]">
         <Spring
-          className="w-full max-w-[560px]"
+          className="w-full max-w-[960px]"
           type="slideUp"
           duration={400}
           delay={300}
         >
-          <form
-            className="mt-5 flex flex-col gap-5"
-            onSubmit={handlePasswordReminder}
-          >
-            <div className="field-wrapper">
-              <label htmlFor="skuId" className="field-label">
-                Product Sku Id
+          <form className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="col-span-2">
+              <label htmlFor="category" className="field-label">
+                Category<span className="text-red-500">*</span>
               </label>
               <input
-                className={classNames("field-input")}
-                required
-                id="skuId"
+                className="field-input"
+                id="category"
                 type="text"
-                minLength={6}
-                placeholder="Product Sku Id"
-                value={formData.skuId}
-                onChange={(e) =>
-                  setformData({ ...formData, skuId: e.target.value })
-                }
+                value={productData.category}
+                readOnly
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  English Name
-                </label>
-                <input
-                  className={classNames("field-input")}
-                  required
-                  id="phone"
-                  type="text"
-                  minLength={10}
-                  placeholder="Product name in english"
-                  value={formData.nameEng}
-                  onChange={(e) =>
-                    setformData({ ...formData, nameEng: e.target.value })
-                  }
-                />
-              </div>
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Arabic Name
-                </label>
-                <input
-                  className={classNames("field-input")}
-                  required
-                  id="phone"
-                  type="text"
-                  minLength={10}
-                  placeholder="Product name in arabic"
-                  value={formData.nameArab}
-                  onChange={(e) =>
-                    setformData({ ...formData, nameArab: e.target.value })
-                  }
-                />
-              </div>
 
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  English Description
-                </label>
-                <textarea
-                  rows={4}
-                  className={"field-input"}
-                  style={{ height: "120px", padding: "0.5rem" }}
-                  required
-                  minLength={15}
-                  id="phone"
-                  type="text"
-                  placeholder="Product Description in english"
-                  value={formData.descEng}
-                  onChange={(e) =>
-                    setformData({ ...formData, descEng: e.target.value })
-                  }
-                />
-              </div>
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Arabic Description
-                </label>
-                <textarea
-                  rows={4}
-                  className={"field-input"}
-                  minLength={15}
-                  style={{ height: "120px", padding: "0.5rem" }}
-                  required
-                  id="phone"
-                  type="text"
-                  placeholder="Product Description in arabic"
-                  value={formData.descArab}
-                  onChange={(e) =>
-                    setformData({ ...formData, descArab: e.target.value })
-                  }
-                />
-              </div>
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Product Orignal Price
-                </label>
-                <input
-                  className={"field-input"}
-                  required
-                  id="phone"
-                  type="number"
-                  minLength={1}
-                  placeholder="0"
-                  value={formData.ogPrice}
-                  onChange={(e) =>
-                    setformData({ ...formData, ogPrice: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="field-wrapper">
-                <label htmlFor="quantity" className="field-label">
-                  Quantity
-                </label>
-                <input
-                  className={classNames("field-input")}
-                  required
-                  id="quantity"
-                  type="number"
-                  min={0} // Ensure the quantity can't be negative
-                  placeholder="Quantity"
-                  value={formData.quantity}
-                  onChange={(e) =>
-                    setformData({ ...formData, quantity: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <div className="field-wrapper">
-              <h6 htmlFor="warrenty" className="h6 text-sm">
-                Select Vehicles
-              </h6>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Select Vehicle
-                </label>
-                {/*<select
-                  className={classNames("field-input")}
-                  id="role"
-                  type="text"
-                  placeholder="Select Vehicle"
-                  defaultValue={""}
-                  value={compatibleValue}
-                  onChange={(e) => setcompatibleValue(e.target.value)}
-                >
-                  <option value={""}>Select Vehicle</option>
-                  {adminCarsData?.map((dat) => (
-                    <option
-                      key={dat?.dbId}
-                      value={`${dat.carCompany} ${dat.carName} ${dat?.carModal}`}
-                    >
-                      {dat.carCompany} {dat?.carName} {dat?.carModal}
-                    </option>
-                  ))}
-                </select>
-                */}
-                <MultiSelectDropdown
-                  options={adminCarsData}
-                  selectedOptions={selectedVehicles}
-                  setSelectedOptions={setSelectedVehicles}
-                  keyExtractor={(item) => item.dbId} // Use dbId as the unique key for each vehicle
-                />
-              </div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleAddCompatibleVehicles();
-                }}
-                className="btn btn--primary max-w-[120px] mt-6"
-              >
-                Add
-              </button>
-              <div className="flex flex-col items-center gap-2">
-                <label
-                  htmlFor="warrenty"
-                  className="field-label"
-                  style={{ color: "transparent" }}
-                >
-                  btn
-                </label>
-                {/*  <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (compatibleValue?.length > 0) {
-                      const fetchTheWholeObject = adminCarsData?.filter(
-                        (dac) =>
-                          `${dac.carCompany} ${dac.carName} ${dac.carModal}` ===
-                          compatibleValue
-                      );
-                      const { dbId, ...rest } = fetchTheWholeObject[0];
-                      setcompatibleVehicles(
-                        compatibleVehicles.length > 0
-                          ? [
-                              ...compatibleVehicles,
-                              {
-                                ...rest,
-                              },
-                            ]
-                          : [
-                              {
-                                ...rest,
-                              },
-                            ]
-                      );
-                      setcompatibleValue("");
-                    } else {
-                      toast.error("Please Select a car first");
-                    }
-                  }}
-                  className="btn btn--primary max-w-[120px]"
-                >
-                  Add
-                </button>*/}
-              </div>
-            </div>
-
-            {compatibleVehicles?.length > 0
-              ? compatibleVehicles.map((dat, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-row items-center justify-start"
-                  >
-                    <div className="flex flex-col item-center justify-start grow">
-                      <p>
-                        {dat.carCompany} {dat.carName} {dat.carModal}
-                      </p>
-                      <p>
-                        {dat.carCompanyAr} {dat.carNameAr} {dat.carModal}
-                      </p>
-                    </div>
-                    <div
-                      onClick={() =>
-                        setcompatibleVehicles(
-                          compatibleVehicles.filter((dat, ind) => ind !== index)
-                        )
+            {productData.category && (
+              <>
+                {productData.category === "ecommerce" && (
+                  <div>
+                    <label htmlFor="brand" className="field-label">
+                      Brand<span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      className="field-input"
+                      id="brand"
+                      required
+                      value={productData.brand || ""}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          brand: e.target.value,
+                        })
                       }
-                      className="flex flex-col item-center justify-start"
                     >
-                      <img
-                        style={{
-                          width: "30px",
-                          height: "25px",
-                          objectFit: "contain",
-                        }}
-                        src={trash}
-                        alt="trash"
+                      <option value="">{productData.brand}</option>
+                      {brands.map((brand, index) => (
+                        <option key={index} value={brand}>
+                          {brand}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="name" className="field-label">
+                    {productData.category === "Service" ? "Service" : "Product"}{" "}
+                    Name
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    className="field-input"
+                    required
+                    id="name"
+                    type="text"
+                    placeholder="Name"
+                    value={productData.name}
+                    onChange={(e) =>
+                      setProductData({ ...productData, name: e.target.value })
+                    }
+                  />
+                </div>
+
+                {productData.category === "ecommerce" && (
+                  <>
+                    <div>
+                      <label htmlFor="skuid" className="field-label">
+                        SKU ID<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        className="field-input"
+                        required
+                        id="skuid"
+                        type="text"
+                        placeholder="SKU ID"
+                        value={productData.skuid}
+                        onChange={(e) =>
+                          setProductData({
+                            ...productData,
+                            skuid: e.target.value,
+                          })
+                        }
                       />
                     </div>
+
+                    <div>
+                      <label htmlFor="quantity" className="field-label">
+                        Quantity<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        className="field-input"
+                        required
+                        id="quantity"
+                        type="number"
+                        placeholder="Quantity"
+                        value={productData.quantity}
+                        onChange={(e) =>
+                          setProductData({
+                            ...productData,
+                            quantity: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label htmlFor="videoUrl" className="field-label">
+                    Video URL
+                    {productData.categoryType === "service" && (
+                      <span className="text-red-500">*</span>
+                    )}
+                  </label>
+                  <input
+                    className="field-input"
+                    id="videoUrl"
+                    type="url"
+                    placeholder="Video URL"
+                    value={productData.videoUrl || ""}
+                    onChange={(e) =>
+                      setProductData({
+                        ...productData,
+                        videoUrl: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="status" className="field-label">
+                    Status<span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="field-input"
+                    id="status"
+                    required
+                    value={productData.status}
+                    onChange={(e) =>
+                      setProductData({ ...productData, status: e.target.value })
+                    }
+                  >
+                    <option value="">{productData.status}</option>
+                    {Array.isArray(activeProductStatus) &&
+                      activeProductStatus
+                        .filter((s) => s.id !== productData.status) // Prevent duplicate
+                        .map((status) => (
+                          <option key={status.id} value={status.id}>
+                            {status.name}
+                          </option>
+                        ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="price" className="field-label">
+                    Price<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    className="field-input"
+                    required
+                    id="price"
+                    type="number"
+                    placeholder="Price"
+                    value={productData.price}
+                    onChange={(e) =>
+                      setProductData({ ...productData, price: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="col-span-2">
+                <label className="field-label">
+                  {productData.category === "Service" ? "Service" : "Product"} Images
+                  {productData.category === "Service" && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </label>
+                <div className="image-upload-wrapper relative w-full border-dashed border-2 border-primary rounded-lg p-4">
+                  <div className="flex flex-wrap gap-4">
+                    {/* Upload Button - Conditionally Rendered */}
+                    {tempImages.length === 0 && (
+                      <label className="cursor-pointer w-32 h-32 flex flex-col items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg border-2 border-dashed border-gray-300 text-gray-500 transition-colors">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 mb-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                          />
+                        </svg>
+                        <span className="text-sm font-medium">Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleImageUpload}
+                        />
+                      </label>
+                    )}
+              
+                    {/* Display Images with Toggle and Delete */}
+                    {tempImages.map((image, index) => (
+                      <div
+                        key={index}
+                        className="relative w-32 h-32 group transition-transform transform hover:scale-105"
+                      >
+                        {/* Image */}
+                        <img
+                          src={image.image_data} // Use image.image_data for the src
+                          alt={`Image ${index}`}
+                          className="w-full h-full object-cover rounded-lg shadow-md"
+                        />
+                    
+                        {/* Delete Icon */}
+                        <button
+                          type="button"
+                          className="absolute top-2 right-2 bg-red-500 text-white text-xs rounded-full p-1 opacity-100 transition-opacity"
+                          onClick={() => handleImageRemove(index, image.id)} // Pass image.id here
+                        >
+                          ✕
+                        </button>
+                    
+                        {/* Toggle Button for Primary Image */}
+                        <div className="absolute bottom-2 left-2 right-2 flex justify-center">
+                          <button
+                            type="button"
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              tempPrimaryImage === image.image_data
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-200 text-gray-700"
+                            }`}
+                            onClick={() => handleSetPrimary(image.image_data)}
+                          >
+                            {tempPrimaryImage === image.image_data ? "Primary" : "Set as Primary"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))
-              : null}
-            {formData.type === "Filters" && formData.type !== "" ? (
-              <div className="field-wrapper">
-                <label htmlFor="phone" className="field-label">
-                  Product Commercial Price
-                </label>
-                <input
-                  className={"field-input"}
-                  required
-                  id="phone"
-                  type="number"
-                  placeholder="0"
-                  minLength={1}
-                  value={formData.cmPrice}
-                  onChange={(e) =>
-                    setformData({ ...formData, cmPrice: e.target.value })
-                  }
-                />
-              </div>
-            ) : null}
-            {formData.type !== "Oils" &&
-            formData.type !== "Filters" &&
-            formData.type !== "engineOil" &&
-            formData.type !== "" ? (
-              <div className="field-wrapper">
-                <label htmlFor="warrenty" className="field-label">
-                  Warrenty
-                </label>
-
-                <input
-                  className={classNames("field-input")}
-                  id="warrenty"
-                  type="number"
-                  minLength={1}
-                  placeholder="0"
-                  required
-                  value={formData.warenty}
-                  onChange={(e) =>
-                    setformData({ ...formData, warenty: e.target.value })
-                  }
-                />
-              </div>
-            ) : null}
-            {formData.type !== "Oils" &&
-            formData.type !== "Filters" &&
-            formData.type !== "engineOil" &&
-            formData.type !== "" ? (
-              <div className="field-wrapper">
-                <h6 htmlFor="warrenty" className="h6 text-sm">
-                  Product Diemensions
-                </h6>
-              </div>
-            ) : null}
-            {formData.type !== "Oils" &&
-            formData.type !== "Filters" &&
-            formData.type !== "engineOil" &&
-            formData.type !== "" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="field-wrapper">
-                  <label htmlFor="warrenty" className="field-label">
-                    Property Name English
-                  </label>
-
-                  <input
-                    className={classNames("field-input")}
-                    id="warrenty"
-                    type="text"
-                    placeholder="English"
-                    value={diemsensionValue.engName}
-                    onChange={(e) =>
-                      setdiemsensionValue({
-                        ...diemsensionValue,
-                        engName: e.target.value,
-                      })
-                    }
-                  />
                 </div>
-                <div className="field-wrapper">
-                  <label htmlFor="warrenty" className="field-label">
-                    Property Name Arabic
-                  </label>
+              </div>
 
-                  <input
-                    className={classNames("field-input")}
-                    id="warrenty"
-                    type="text"
-                    placeholder="Arabic"
-                    value={diemsensionValue.arabName}
-                    onChange={(e) =>
-                      setdiemsensionValue({
-                        ...diemsensionValue,
-                        arabName: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="field-wrapper">
-                  <label htmlFor="warrenty" className="field-label">
-                    Property Value
-                  </label>
+                {renderPropertiesTable()}
 
-                  <input
-                    className={classNames("field-input")}
-                    id="warrenty"
-                    type="text"
-                    placeholder="Value"
-                    value={diemsensionValue.value}
-                    onChange={(e) =>
-                      setdiemsensionValue({
-                        ...diemsensionValue,
-                        value: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <label
-                    htmlFor="warrenty"
-                    className="field-label"
-                    style={{ color: "transparent" }}
-                  >
-                    btn
-                  </label>
+                {productData.category === "service" && renderServiceInput()}
+
+                <div className="col-span-2 flex justify-center mt-5">
                   <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (
-                        diemsensionValue.arabName.length >= 3 &&
-                        diemsensionValue.engName.length >= 3 &&
-                        diemsensionValue.value.length >= 2
-                      ) {
-                        setdiemensionAaay(
-                          diemensionAaay.length > 0
-                            ? [
-                                ...diemensionAaay,
-                                {
-                                  nameEng: diemsensionValue.engName,
-                                  nameArab: diemsensionValue.arabName,
-                                  value: diemsensionValue.value,
-                                },
-                              ]
-                            : [
-                                {
-                                  nameEng: diemsensionValue.engName,
-                                  nameArab: diemsensionValue.arabName,
-                                  value: diemsensionValue.value,
-                                },
-                              ]
-                        );
-                        setdiemsensionValue({
-                          engName: "",
-                          arabName: "",
-                          value: "",
-                        });
-                      } else {
-                        toast.error(
-                          "Product Diemension Name in arabic and english must be atleat 3 letters and value should be atleast 2 letters"
-                        );
-                      }
-                    }}
-                    className="btn btn--primary max-w-[120px]"
+                    type="button"
+                    className="btn btn--primary"
+                    onClick={handleProductUpdate}
                   >
-                    Add
+                    Update{" "}
+                    {productData.category === "Service" ? "Service" : "Product"}
                   </button>
                 </div>
-              </div>
-            ) : null}
-            {formData.type !== "Oils" &&
-            formData.type !== "Filters" &&
-            formData.type !== "engineOil" &&
-            formData.type !== "" &&
-            diemensionAaay?.length > 0
-              ? diemensionAaay.map((dat, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-row items-center justify-start"
-                  >
-                    <div className="flex flex-col item-center justify-start grow">
-                      <h5>
-                        {dat.nameEng},{dat.nameArab}
-                      </h5>
-                      <p>{dat.value}</p>
-                    </div>
-                    <div
-                      onClick={() =>
-                        setdiemensionAaay(
-                          diemensionAaay.filter((dat, ind) => ind !== index)
-                        )
-                      }
-                      className="flex flex-col item-center justify-start"
-                    >
-                      <img
-                        style={{
-                          width: "30px",
-                          height: "25px",
-                          objectFit: "contain",
-                        }}
-                        src={trash}
-                        alt="trash"
-                      />
-                    </div>
-                  </div>
-                ))
-              : null}
-            <label className="field-label">Product Images</label>
-            <div className="widgets-grid grid-cols-1 md:grid-cols-2">
-              {imagesArray &&
-                imagesArray?.map((dat, index) => (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      onClick={() => removeImageFromDb(index)}
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        right: 0,
-                        width: "50px",
-                        height: "50px",
-                        background: "rgba(0,0,0,0.5)",
-                        borderRadius: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexDirection: "column",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <img
-                        src={trash}
-                        style={{
-                          width: "30px",
-                          height: "25px",
-                          objectFit: "contain",
-                        }}
-                        alt="trash"
-                      />
-                    </div>
-                    <img
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "10px",
-                      }}
-                      key={index}
-                      src={dat.imgLink}
-                      alt="banner"
-                    />
-                  </div>
-                ))}
-              {isLoadingModal ? (
-                <div className="flex justify-center min-h-[120px] items-center w-100 h-100 btn--primary rounded-lg">
-                  <img
-                    className="w-[40px] h-[40px]"
-                    src="https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif"
-                    alt="loading"
-                  />
-                </div>
-              ) : (
-                <DropFiles
-                  type="image"
-                  multiple={false}
-                  onChange={uploadImageFunction}
-                  wrapperClass="flex justify-center min-h-[120px] items-center w-100 h-100 btn--primary rounded-lg"
-                >
-                  <i
-                    className="icon-circle-plus-regular"
-                    style={{ fontSize: "5rem" }}
-                  />
-                </DropFiles>
-              )}
-            </div>
-            <div className="flex flex-col items-center gap-6 mt-4 mb-10">
-              <button type="submit" className="btn btn--primary w-full">
-                Upload
-              </button>
-            </div>
+              </>
+            )}
           </form>
         </Spring>
       </div>

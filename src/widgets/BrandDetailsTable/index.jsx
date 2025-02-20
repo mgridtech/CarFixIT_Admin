@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import StyledTable from "./styles";
 import Empty from "../../components/Empty";
 import Pagination from "../../ui/Pagination";
@@ -7,20 +7,20 @@ import { useWindowSize } from "react-use";
 import { Switch } from "antd";
 import usePagination from "../../hooks/usePagination";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import Services from "../../pages/Services/Services";
 
-const BrandDetailsTable = () => {
+const BrandDetailsTable = ({ brandId }) => {
   const { width } = useWindowSize();
   const navigate = useNavigate();
+  const { id } = useParams();
+  console.log(id);
+  
 
-  const [staticData, setStaticData] = useState([
-    { id: 1, categoryName: "Category A", status: true },
-    { id: 2, categoryName: "Category B", status: false },
-    { id: 3, categoryName: "Category C", status: true },
-  ]);
-
-  const [filteredData, setFilteredData] = useState(staticData);
+  const [staticData, setStaticData] = useState([]); // Default to an empty array
+  const [filteredData, setFilteredData] = useState([]); // Default to an empty array
   const [category, setCategory] = useState("all");
-  const pagination = usePagination(filteredData, 10);
+
+  const pagination = usePagination(filteredData || [], 10); // Ensure an array is passed
 
   const toggleStatus = (id) => {
     const updatedData = staticData.map((item) =>
@@ -37,6 +37,26 @@ const BrandDetailsTable = () => {
       setFilteredData(updatedData);
     }
   };
+
+  useEffect(() => {
+    const fetchBrandCategories = async () => {
+      try {
+        const response = await Services.getInstance().getBrandCategories(id);
+        if (response.error) {
+          console.error("Error fetching categories:", response.error);
+        } else {
+          const fetchedData = response.data?.categories || []; // Extract categories array
+          setStaticData(fetchedData);
+          setFilteredData(fetchedData);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    
+
+    fetchBrandCategories();
+  }, [brandId,id]);
 
   useEffect(() => {
     if (category === "all") {
@@ -75,7 +95,7 @@ const BrandDetailsTable = () => {
                 key: "id",
                 align: "center",
                 render: (_, __, index) => (
-                  <span>{pagination.pageIndex * 10 + index + 1}</span>
+                  <span>{index + 1}</span>
                 ),
               },
               {
@@ -90,27 +110,6 @@ const BrandDetailsTable = () => {
                 align: "center",
                 render: (status, record) => (
                   <Switch checked={status} onChange={() => toggleStatus(record.id)} />
-                ),
-              },
-              {
-                title: "Actions",
-                key: "actions",
-                align: "center",
-                render: (_, record) => (
-                  <div className="flex gap-2 justify-center">
-                    <button
-                      className="px-3 py-1 text-blue-500 hover:text-blue-700"
-                      onClick={() => handleEdit(record.id)}
-                    >
-                      <FaEdit className="mr-2" />
-                    </button>
-                    <button
-                      className="px-3 py-1 text-red-500 hover:text-red-700"
-                      onClick={() => handleDelete(record)}
-                    >
-                      <FaTrash className="mr-2" />
-                    </button>
-                  </div>
                 ),
               },
             ]}
